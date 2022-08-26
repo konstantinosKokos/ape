@@ -27,6 +27,13 @@ def random_mask(tree: Tree[Node], mask_ops: bool = True) -> Tree[bool]:
     return choice(all_masks(tree, mask_ops))
 
 
+def mask_bottom_right(tree: Tree[Node]) -> Tree[bool]:
+    mask = tree.fmap(lambda _: True)
+    assert isinstance(mask, Binary)
+    mask.right.node = False
+    return mask
+
+
 def positionally_encode(tree: Tree[Node]) -> Tree[int]:
     def go(_tree: Tree[Node], parent: int) -> Tree[int]:
         match _tree:
