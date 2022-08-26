@@ -10,7 +10,7 @@ from torch.optim import Optimizer
 from typing import Iterable
 
 
-class MTM(Encoder):
+class MaskedTreeModeling(Encoder):
     def predict_mask(self, content_ids: Tensor, position_ids: Tensor, atn_mask: Tensor, masking_value: int) -> Tensor:
         ctx = self.forward(content_ids, position_ids, atn_mask)
         return self.embedding.invert(ctx[content_ids == masking_value])
