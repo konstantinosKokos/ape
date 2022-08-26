@@ -139,6 +139,16 @@ def combine_with(op: Node, lefts: set[Tree[Node]], rights: set[Tree[Node]]) -> s
     return {Binary(op, left, right) for left in lefts for right in rights}
 
 
+def make_eval(leaf_semantics: Callable[[str], T],
+              operator_semantics: Callable[[str], Callable[[T, T], T]]) -> Callable[[Tree[str]], T]:
+    def eval_tree(tree: Tree[str]) -> T:
+        match tree:
+            case Leaf(value): return leaf_semantics(value)
+            case Binary(op, left, right): return operator_semantics(op)(eval_tree(left), eval_tree(right))
+        raise ValueError
+    return eval_tree
+
+
 class TreeGenerator(Generic[Node]):
     def __init__(self, leaves: set[Node], operators: set[Node]):
         self.leaves = list(leaves)
@@ -155,3 +165,4 @@ class TreeGenerator(Generic[Node]):
         yield from (self.random_tree(depth) for _ in range(num_trees))
 
 
+example_tree: Tree[int] = Binary(1, Binary(2, Leaf(4), Leaf(5)), Binary(3, Leaf(6), Leaf(7)))
