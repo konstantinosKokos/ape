@@ -149,6 +149,32 @@ def make_eval(leaf_semantics: Callable[[str], T],
     return eval_tree
 
 
+def constant(depth: int, value: Node) -> Tree[Node]:
+    if depth == 0:
+        return Leaf(value)
+    return Binary(value, constant(depth - 1, value), constant(depth - 1, value))
+
+
+def positionally_encode(tree: Tree[Node]) -> Tree[int]:
+    def go(_tree: Tree[Node], parent: int) -> Tree[int]:
+        match _tree:
+            case Leaf(_):
+                return Leaf(parent)
+            case Binary(_, left, right):
+                return Binary(parent, go(left, 2 * parent), go(right, 2 * parent + 1))
+        raise TypeError
+    return go(tree, 1)
+
+
+def descendant_nodes(tree: Tree[Node]) -> Tree[list[Node]]:
+    def go(_tree: Tree[Node], history: list[Node]) -> Tree[list[Node]]:
+        match _tree:
+            case Leaf(_): return Leaf(history)
+            case Binary(node, left, right):
+                return Binary(history, go(left, history + [node]), go(right, history + [node]))  # type: ignore
+    return go(tree, [])
+
+
 class TreeGenerator(Generic[Node]):
     def __init__(self, leaves: set[Node], operators: set[Node]):
         self.leaves = list(leaves)

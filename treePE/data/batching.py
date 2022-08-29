@@ -2,7 +2,7 @@ import pdb
 
 import torch
 from torch import Tensor
-from .tree import Tree, Node, breadth_first
+from .tree import Tree, Node, constant, positionally_encode, descendant_nodes
 from typing import Callable
 
 
@@ -32,6 +32,36 @@ def mask_from_lens(lens: list[int]) -> Tensor:
     for i, l in enumerate(lens):
         ones[i, :, l:] = 0
     return ones
+
+
+def dfs_mask(max_depth: int, traversal: Callable[[Tree[Node]], list[Node]]) -> Tensor:
+    """
+    given a tree of n nodes, create a (n x n) tensor M where M[i, j] = 1 if node i is a descendant of node j
+    """
+    tree_positions = positionally_encode(constant(max_depth, None))
+    mask = [[other in descendants for other in traversal(tree_positions)]
+            for descendants in traversal(descendant_nodes(tree_positions))]
+    return torch.tensor(mask)
+
+
+def bfs_mask(max_depth: int, traversal: Callable[[Tree[Node]], list[Node]]) -> Tensor:
+    """
+    given a tree of n nodes, create a (n x n) tensor M where M[i, j] = 1 if node i occurs above/to the right of node j
+    """
+    tree_positions = positionally_encode(constant(max_depth, None))
+    mask = [[tp > other for other in traversal(tree_positions)]
+            for tp in traversal(tree_positions)]
+    return torch.tensor(mask)
+
+
+def depth_parallel_mask(max_depth: int, traversal: Callable[[Tree[Node]], list[Node]]) -> Tensor:
+    """
+    given a tree of n nodes, create a (n x n) tensor M where M[i, j] = 1 if node i occurs above node j
+    """
+    tree_positions = positionally_encode(constant(max_depth, None))
+    mask = [[tp//2 >= other for other in traversal(tree_positions)]
+            for tp in traversal(tree_positions)]
+    return torch.tensor(mask)
 
 
 def accuracy(preds: Tensor, truths: Tensor) -> tuple[int, int]:
