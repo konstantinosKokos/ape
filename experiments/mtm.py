@@ -6,9 +6,11 @@ from treePE.data.batching import make_cfn_mtm
 
 from treePE.neural.positional_encoders import PositionalEncoder
 from treePE.neural.models import MaskedTreeModeling
+from treePE.neural.schedule import make_schedule
 
 from torch import device
 from torch.optim import AdamW
+from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
 import pickle
@@ -19,7 +21,8 @@ def run_one(data_path: str,
             num_heads: int,
             num_layers: int,
             dim: int,
-            traversal: Callable[[Tree[Node]], list[Node]], positional_encoder: PositionalEncoder) -> None:
+            traversal: Callable[[Tree[Node]], list[Node]], positional_encoder: PositionalEncoder,
+            num_epochs: int = 100) -> None:
     with open(data_path, 'rb') as f:
         data = pickle.load(f)
     tokenizer = TreeTokenizer.from_file(tokenizer_path)
@@ -34,20 +37,29 @@ def run_one(data_path: str,
                                dim=dim, positional_encoder=positional_encoder)
     model = model.to(device('cuda'))
 
-    optim = AdamW(model.parameters(), lr=1e-3, weight_decay=1e-2)
+    optimizer = AdamW([{'params': model.encoder_layers.parameters(), 'lr': 1e-3},
+                   {'params': model.embedding.parameters(), 'lr': 1e-3},
+                   {'params': model.positional_encoder.parameters(), 'lr': 1e-4}],
+                  weight_decay=1e-2)
+    schedule = make_schedule(warmup_steps=int(0.1 * len(train_dl) * num_epochs),
+                             warmdown_steps=int(0.9 * len(train_dl) * num_epochs),
+                             total_steps=num_epochs * len(train_dl),
+                             max_lr=1,
+                             min_lr=1e-2)
+    scheduler = LambdaLR(optimizer, [schedule for _ in range(len(optimizer.param_groups))], last_epoch=-1)
 
-    for epoch in range(99):
+    for epoch in range(num_epochs):
         print(f'Epoch {epoch}')
         print('=' * 64)
         model.train()
         train_loss, train_correct, train_total = \
-            model.go_epoch(data=train_dl, masking_value=tokenizer.MASK_token_id, optimizer=optim)
+            model.go_epoch(data=train_dl, masking_value=tokenizer.MASK_token_id, opt_schedule=(optimizer, scheduler))
         print(f'Train loss: {train_loss}, accuracy: {train_correct}/{train_total} ({train_correct / train_total})')
         model.eval()
         dev_loss, dev_correct, dev_total = \
-            model.go_epoch(data=dev_dl, masking_value=tokenizer.MASK_token_id, optimizer=None)
+            model.go_epoch(data=dev_dl, masking_value=tokenizer.MASK_token_id, opt_schedule=None)
         print(f'Dev loss: {dev_loss}, accuracy: {dev_correct}/{dev_total} ({dev_correct / dev_total})')
         test_loss, test_correct, test_total = \
-            model.go_epoch(data=test_dl, masking_value=tokenizer.MASK_token_id, optimizer=None)
+            model.go_epoch(data=test_dl, masking_value=tokenizer.MASK_token_id, opt_schedule=None)
         print(f'Test loss: {test_loss}, accuracy: {test_correct}/{test_total} ({test_correct / test_total})')
         print('\n')
