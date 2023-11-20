@@ -24,3 +24,10 @@ class SequenceRepeat(SequenceCopy):
     def sample(self, length: int) -> SequentialSample:
         word = tuple(random.randint(1, self.vocab_size - 1) for _ in range(length))
         return SequentialSample(x=word, y=word * self.num_repeats, task=self)
+
+
+@dataclass
+class SequenceReverse(SequenceCopy):
+    def sample(self, length: int) -> SequentialSample:
+        word = tuple(random.randint(1, self.vocab_size - 1) for _ in range(length))
+        return SequentialSample(x=word, y=word[::-1], task=self)
