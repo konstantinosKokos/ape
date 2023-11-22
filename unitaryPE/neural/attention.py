@@ -17,7 +17,7 @@ def multihead_atn_fn(
     batch_size, seq_len, dim, num_heads = keys.shape
 
     if mediator is not None:
-        weights = torch.einsum('bqdh,bkdh,bqkd->bqkh', queries, keys, mediator) / sqrt(dim)
+        weights = torch.einsum('bqdh,bkdh,bqkdh->bqkh', queries, keys, mediator) / sqrt(dim)
     else:
         weights = torch.einsum('bqdh,bkdh->bqkh', queries, keys) / sqrt(dim)
 

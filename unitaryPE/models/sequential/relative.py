@@ -34,9 +34,9 @@ class SequentialRelative(Module):
         enc_len = encoder_ids.shape[1]
         dec_len = decoder_ids.shape[1]
         max_seq_len = max(enc_len, dec_len)
-        positions = torch.arange(max_seq_len, device=decoder_input.device)[None, :]
-        positions = positions[:, :, None] - positions[:, None, :]
-        mediator = self.positional_encoder.forward(positions)
+        distances = torch.arange(max_seq_len, device=decoder_input.device)[None, :]
+        distances = distances[:, :, None] - distances[:, None, :]
+        mediator = self.positional_encoder.forward(distances).unsqueeze(-1)
 
         enc_atn_fn = self.positional_encoder.adjust_attention(mediator[:, :enc_len, :enc_len])
         dec_atn_fn = self.positional_encoder.adjust_attention(mediator[:, :dec_len, :dec_len])

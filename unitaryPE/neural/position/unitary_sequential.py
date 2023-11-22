@@ -7,14 +7,13 @@ from math import ceil, log2
 from torch.nn.init import normal_ as normal
 from torch.nn.utils.parametrizations import _Orthogonal, parametrize, _OrthMaps
 
-from .schemes import applicative, AtnFn
+from .schemes import applicative, AtnFn, intermediating, orthogonal_penalty
 
 
 class UnitarySequential(Module):
     def __init__(self, dim: int) -> None:
         super(UnitarySequential, self).__init__()
         self.dim = dim
-        self.seed: Parameter = Parameter(torch.ones(dim).unsqueeze(0), requires_grad=False)
         self.primitives = Parameter(normal(torch.empty(dim, dim)))
         self._orthogonalize()
         self.maps = None
@@ -22,18 +21,23 @@ class UnitarySequential(Module):
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
 
-    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor) -> AtnFn:
-        return applicative(q_maps, k_maps)
+    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: Tensor | None) -> AtnFn:
+        inner = intermediating(mediator) if mediator is not None else None
+        return applicative(q_maps, k_maps)(inner)
 
     def _orthogonalize(self) -> None:
+        # orthogonal_(self.primitives)
         parametrize.register_parametrization(
             module=self,
             tensor_name='primitives',
             parametrization=_Orthogonal(
                 weight=self.primitives,
-                orthogonal_map=_OrthMaps.cayley,
+                orthogonal_map=_OrthMaps.matrix_exp,
                 use_trivialization=True),
             unsafe=True)
+
+    def penalty(self) -> Tensor:
+        return orthogonal_penalty(self.primitives)
 
     def _expand_maps(self, history: Tensor) -> Tensor:
         longest = history[-1]

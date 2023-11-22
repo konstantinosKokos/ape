@@ -8,14 +8,14 @@ from ...neural.position import UnitarySequential
 from ...neural.embedding import InvertibleEmbedding
 
 
-class SequentialApplicative(Module):
+class SequentialUnitary(Module):
     def __init__(
             self,
             vocab_size: int,
             dim: int,
             num_heads: int,
             num_layers: tuple[int, int]):
-        super(SequentialApplicative, self).__init__()
+        super(SequentialUnitary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
         self.positional_encoder = UnitarySequential(dim=dim//num_heads)
@@ -30,21 +30,28 @@ class SequentialApplicative(Module):
             cross_mask: Tensor) -> Tensor:
         encoder_input = self.embedding.embed(encoder_ids)
         decoder_input = self.embedding.embed(decoder_ids)
-        max_seq_len = max(encoder_ids.shape[1], decoder_ids.shape[1])
+        enc_len = encoder_ids.shape[1]
+        dec_len = decoder_ids.shape[1]
+        max_seq_len = max(enc_len, dec_len)
         self.positional_encoder.precompute(max_seq_len)
         positions = torch.arange(max_seq_len, device=decoder_input.device)[None, :]
+        distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
+        mediator = (0.98 ** distances.abs())
 
         enc_maps = self.positional_encoder.forward(positions[:1, :encoder_ids.shape[1]])
         dec_maps = self.positional_encoder.forward(positions[:1, :decoder_ids.shape[1]])
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,
-            k_maps=enc_maps)
+            k_maps=enc_maps,
+            mediator=mediator[:, :enc_len, :enc_len])
         dec_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
-            k_maps=dec_maps)
+            k_maps=dec_maps,
+            mediator=mediator[:, :dec_len, :dec_len])
         cross_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
-            k_maps=enc_maps)
+            k_maps=enc_maps,
+            mediator=mediator[:, :dec_len, :enc_len])
 
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,
