@@ -150,6 +150,7 @@ def run(
                 correct += sum(preds.argmax(dim=-1).eq(output_ids)).item()
                 total += output_ids.numel()
             print(f'test: {correct / total}')
+            sys.stdout.flush()
 
 
 def parse_args():
