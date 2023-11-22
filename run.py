@@ -1,3 +1,11 @@
+import os
+import sys
+
+if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not None:
+    sys.path.append(os.environ['SLURM_SUBMIT_DIR'])
+
+
+import argparse
 import torch
 
 from unitaryPE.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
@@ -144,15 +152,33 @@ def run(
             print(f'test: {correct / total}')
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Run a single training iteration')
+    parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal'], help='Type of model to use')
+    parser.add_argument('--num_repeats', type=int, default=1, help='Number of repeats for SequenceRepeat task')
+    parser.add_argument('--reverse', action='store_true', help='Use reverse for SequenceReverse task')
+    parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
+    parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
+    parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
+    parser.add_argument('--num_epochs', type=int, default=200, help='Number of training epochs')
+    parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
+    parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
+    parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
+    parser.add_argument('--num_positions', type=int, default=55, help='Number of positions for the window size')
+
+    return parser.parse_args()
+
+
 if __name__ == '__main__':
-    run(model=Model.Relative,
-        num_repeats=1,
-        reverse=True,
-        vocab_size=20,
-        seq_len_mu=100,
-        seq_len_var=10,
-        num_epochs=200,
-        num_layers=(2, 2),
-        dim=512,
-        num_heads=8,
-        num_positions=50)
+    args = parse_args()
+    run(model=Model[args.model],
+        num_heads=args.num_heads,
+        num_epochs=args.num_epochs,
+        num_positions=args.num_positions,
+        num_repeats=args.num_repeats,
+        reverse=args.reverse,
+        vocab_size=args.vocab_size,
+        seq_len_mu=args.seq_len_mu,
+        seq_len_var=args.seq_len_var,
+        dim=args.dim,
+        num_layers=args.num_layers)
