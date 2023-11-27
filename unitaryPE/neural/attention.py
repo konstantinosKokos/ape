@@ -7,9 +7,6 @@ from typing import Callable
 AtnFn = Callable[[Tensor, Tensor, Tensor, Tensor | None], Tensor]
 
 
-
-
-
 def multihead_atn_fn(
         queries: Tensor,
         keys: Tensor,

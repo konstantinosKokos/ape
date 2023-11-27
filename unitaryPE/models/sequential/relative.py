@@ -39,7 +39,8 @@ class SequentialRelative(Module):
         mediator = self.positional_encoder.forward(distances).unsqueeze(-1)
 
         enc_atn_fn = self.positional_encoder.adjust_attention(mediator[:, :enc_len, :enc_len])
-        dec_atn_fn = self.positional_encoder.adjust_attention(mediator[:, :dec_len, :dec_len])
+        dec_atn_fn = self.positional_encoder.adjust_attention(
+            decoder_mask[:, :, :, None, None] * mediator[:, :dec_len, :dec_len])
         cross_atn_fn = self.positional_encoder.adjust_attention(mediator[:, :dec_len, :enc_len])
 
         encoder_input = self.encoder.forward(
