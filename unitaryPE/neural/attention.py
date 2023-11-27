@@ -4,8 +4,10 @@ from torch.nn import Linear, Module
 from math import sqrt
 from typing import Callable
 
-
 AtnFn = Callable[[Tensor, Tensor, Tensor, Tensor | None], Tensor]
+
+
+
 
 
 def multihead_atn_fn(
@@ -13,13 +15,20 @@ def multihead_atn_fn(
         keys: Tensor,
         values: Tensor,
         mask: Tensor | None,
-        mediator: Tensor | None = None) -> Tensor:
+        mediator: tuple[Tensor, bool] | None = None) -> Tensor:
     batch_size, seq_len, dim, num_heads = keys.shape
 
-    if mediator is not None:
-        weights = torch.einsum('bqdh,bkdh,bqkdh->bqkh', queries, keys, mediator) / sqrt(dim)
-    else:
-        weights = torch.einsum('bqdh,bkdh->bqkh', queries, keys) / sqrt(dim)
+    match mediator:
+        case None:
+            weights = torch.einsum('bqdh,bkdh->bqkh', queries, keys) / sqrt(dim)
+        case (mediator_weights, True):
+            weights = torch.einsum('bqdh,bkdh,bqkdh->bqkh', queries, keys, mediator_weights) / sqrt(dim)
+        case (mediator_weights, False):
+            weights = torch.einsum('bqdh,bkdh->bqkh', queries, keys) / sqrt(dim)
+            additive_weights = torch.einsum('bqdh,bqkdh->bqkh', queries, mediator_weights)
+            weights = weights + additive_weights
+        case _:
+            raise ValueError
 
     if mask is not None:
         if mask.shape == (batch_size, seq_len):

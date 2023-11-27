@@ -43,15 +43,15 @@ class SequentialUnitary(Module):
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,
             k_maps=enc_maps,
-            mediator=mediator[:, :enc_len, :enc_len])
+            mediator=(mediator[:, :enc_len, :enc_len], True))
         dec_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=dec_maps,
-            mediator=mediator[:, :dec_len, :dec_len])
+            mediator=(mediator[:, :dec_len, :dec_len], True))
         cross_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=enc_maps,
-            mediator=mediator[:, :dec_len, :enc_len])
+            mediator=(mediator[:, :dec_len, :enc_len], True))
 
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,

@@ -1,6 +1,6 @@
 from torch.nn import Module, Embedding
 from torch import Tensor
-from .schemes import intermediating
+from .schemes import additive_mediator
 
 
 class Relative(Module):
@@ -14,5 +14,5 @@ class Relative(Module):
         distances = distances + self.window_size
         return self.dist_embedding(distances)
 
-    def adjust_attention(self, mediator: Tensor):
-        return intermediating(mediator)
+    def adjust_attention(self, qk_pos: Tensor) -> Tensor:
+        return additive_mediator(qk_pos)

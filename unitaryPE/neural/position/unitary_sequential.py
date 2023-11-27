@@ -7,7 +7,7 @@ from math import ceil, log2
 from torch.nn.init import normal_ as normal
 from torch.nn.utils.parametrizations import _Orthogonal, parametrize, _OrthMaps
 
-from .schemes import applicative, AtnFn, intermediating, orthogonal_penalty
+from .schemes import applicative, AtnFn, multiplicative_mediator, orthogonal_penalty
 
 
 class UnitarySequential(Module):
@@ -21,9 +21,8 @@ class UnitarySequential(Module):
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
 
-    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: Tensor | None) -> AtnFn:
-        inner = intermediating(mediator) if mediator is not None else None
-        return applicative(q_maps, k_maps)(inner)
+    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
+        return applicative(q_maps, k_maps, mediator=mediator)
 
     def _orthogonalize(self) -> None:
         # orthogonal_(self.primitives)
