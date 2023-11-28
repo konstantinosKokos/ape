@@ -2,13 +2,14 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
+from .base import Base
 from ...neural.encoder import Encoder
 from ...neural.decoder import Decoder
 from ...neural.position import Relative
 from ...neural.embedding import InvertibleEmbedding
 
 
-class SequentialRelative(Module):
+class SequentialRelative(Module, Base):
     def __init__(
             self,
             vocab_size: int,
@@ -19,7 +20,7 @@ class SequentialRelative(Module):
         super(SequentialRelative, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = Relative(dim=dim//num_heads, window_size=window_size)
+        self.positional_encoder = Relative(dim=dim // num_heads, window_size=window_size)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(

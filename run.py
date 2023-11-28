@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 
 if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not None:
     sys.path.append(os.environ['SLURM_SUBMIT_DIR'])
@@ -31,6 +32,8 @@ def run(
         num_heads: int,
         dim: int,
         num_positions: int | None):
+    start_time = time.time()
+
     if num_repeats > 1 and reverse:
         raise ValueError('No repeat-reverse')
 
@@ -77,14 +80,16 @@ def run(
             raise ValueError
 
     steps_per_epoch = len(train_dl)
-    optim = AdamW(model.parameters(), lr=5e-4)
+    optim = AdamW(model.parameters(), lr=1)
     scheduler = LambdaLR(
         optimizer=optim,
         lr_lambda=make_schedule(
             warmup_steps=steps_per_epoch * 5,
             warmdown_steps=steps_per_epoch * (num_epochs - 5),
             total_steps=steps_per_epoch * num_epochs,
-            min_lr=1e-3, max_lr=1))
+            min_lr=1e-9,
+            max_lr=5e-4,
+            init_lr=1e-7))
 
     for epoch in range(num_epochs):
         print(scheduler.get_last_lr())
@@ -92,25 +97,14 @@ def run(
         model.train()
         print(f'{epoch}')
         for (input_ids, output_ids, input_mask, output_mask, causal_mask) in train_dl:
-            preds = model.forward(
-                encoder_ids=input_ids,
-                encoder_mask=input_mask,
-                decoder_ids=output_ids,
-                decoder_mask=causal_mask,
-                cross_mask=input_mask)
-            preds = preds[:, :-1].flatten(0, -2)
-            output_ids = output_ids[:, 1:].flatten()
-            pad_mask = output_ids != -1
-            preds = preds[pad_mask]
-            output_ids = output_ids[pad_mask]
-            loss = cross_entropy(
-                input=preds,
-                target=output_ids,
-                reduction='mean')
-            if isinstance(model, SequentialUnitary):
-                loss += model.positional_encoder.penalty()
-            correct += sum(preds.argmax(dim=-1).eq(output_ids)).item()
-            total += output_ids.numel()
+            loss, batch_correct, batch_total = model.go_batch(
+                input_ids=input_ids,
+                output_ids=output_ids,
+                input_mask=input_mask,
+                output_mask=output_mask,
+                causal_mask=causal_mask)
+            correct += batch_correct
+            total += batch_total
             epoch_loss += loss.item()
             loss.backward()
             optim.step()
@@ -121,36 +115,29 @@ def run(
         correct, total = 0, 0
         with torch.no_grad():
             for (input_ids, output_ids, input_mask, output_mask, causal_mask) in dev_dl:
-                preds = model.forward(
-                    encoder_ids=input_ids,
-                    encoder_mask=input_mask,
-                    decoder_ids=output_ids,
-                    decoder_mask=causal_mask,
-                    cross_mask=input_mask)
-                preds = preds[:, :-1].flatten(0, -2)
-                output_ids = output_ids[:, 1:].flatten()
-                pad_mask = output_ids != -1
-                preds = preds[pad_mask]
-                output_ids = output_ids[pad_mask]
-                correct += sum(preds.argmax(dim=-1).eq(output_ids)).item()
-                total += output_ids.numel()
+                _, batch_correct, batch_total = model.go_batch(
+                    input_ids=input_ids,
+                    output_ids=output_ids,
+                    input_mask=input_mask,
+                    output_mask=output_mask,
+                    causal_mask=causal_mask)
+                correct += batch_correct
+                total += batch_total
             print(f'dev: {correct/total}')
             for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
-                preds = model.forward(
-                    encoder_ids=input_ids,
-                    encoder_mask=input_mask,
-                    decoder_ids=output_ids,
-                    decoder_mask=causal_mask,
-                    cross_mask=input_mask)
-                preds = preds[:, :-1].flatten(0, -2)
-                output_ids = output_ids[:, 1:].flatten()
-                pad_mask = output_ids != -1
-                preds = preds[pad_mask]
-                output_ids = output_ids[pad_mask]
-                correct += sum(preds.argmax(dim=-1).eq(output_ids)).item()
-                total += output_ids.numel()
+                _, batch_correct, batch_total = model.go_batch(
+                    input_ids=input_ids,
+                    output_ids=output_ids,
+                    input_mask=input_mask,
+                    output_mask=output_mask,
+                    causal_mask=causal_mask)
+                correct += batch_correct
+                total += batch_total
             print(f'test: {correct / total}')
-            sys.stdout.flush()
+        sys.stdout.flush()
+    duration = time.time() - start_time
+    print(f'Training took {duration} seconds.')
+    sys.stdout.flush()
 
 
 def parse_args():
