@@ -2,6 +2,7 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
+from .base import Base
 from ...neural.encoder import Encoder
 from ...neural.decoder import Decoder
 from ...neural.position import SinusoidalFlat
@@ -9,7 +10,7 @@ from ...neural.embedding import InvertibleEmbedding
 from ...neural.attention import multihead_atn_fn
 
 
-class SequentialVanilla(Module):
+class SequentialVanilla(Module, Base):
     def __init__(
             self,
             vocab_size: int,

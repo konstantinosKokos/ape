@@ -2,13 +2,14 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
+from .base import Base
 from ...neural.encoder import Encoder
 from ...neural.decoder import Decoder
 from ...neural.position import UnitarySequential
 from ...neural.embedding import InvertibleEmbedding
 
 
-class SequentialUnitary(Module):
+class SequentialUnitary(Module, Base):
     def __init__(
             self,
             vocab_size: int,
