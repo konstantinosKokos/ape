@@ -30,7 +30,9 @@ def run(
         num_layers: tuple[int, int],
         num_heads: int,
         dim: int,
-        num_positions: int | None):
+        num_positions: int | None,
+        store_path: str | None,
+        seed: int = 42):
     start_time = time.time()
 
     if num_repeats > 1 and reverse:
@@ -49,11 +51,13 @@ def run(
     train_set, dev_set, test_set = task.make_sets(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
         num_samples=(10000, 1000, 1000),
-        seed=42)
+        seed=42)  # keep this fixed for data consistency
 
     train_dl = DataLoader(train_set, batch_size=64, collate_fn=make_collator('cuda'), shuffle=True)
     dev_dl = DataLoader(dev_set, batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
     test_dl = DataLoader(test_set, batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
+
+    torch.manual_seed(seed)
 
     match model:
         case Model.Relative:
@@ -90,6 +94,7 @@ def run(
             max_lr=5e-4,
             init_lr=1e-7))
 
+    best_dev_acc = -1e10
     for epoch in range(num_epochs):
         correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
         model.train()
@@ -128,8 +133,11 @@ def run(
                     correct_samples += batch_correct_samples
                     epoch_loss += loss.item()
                 print(f'Dev loss {epoch_loss}')
-                print(f'Dev acc (token) {correct_tokens / total_tokens}')
+                print(f'Dev acc (token) {(dev_acc := correct_tokens / total_tokens)}')
                 print(f'Dev acc (sample) {correct_samples / len(dev_set)}')
+                if dev_acc > best_dev_acc and store_path is not None:
+                    best_dev_acc = dev_acc
+                    torch.save(model.state_dict(), store_path)
                 for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
                     loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
                         input_ids=input_ids,
@@ -144,6 +152,7 @@ def run(
                 print(f'Test loss {epoch_loss}')
                 print(f'Test acc (token) {correct_tokens / total_tokens}')
                 print(f'Test acc (sample) {correct_samples / len(test_set)}')
+        print('-' * 64)
         sys.stdout.flush()
     duration = time.time() - start_time
     print(f'Training took {duration} seconds.')
@@ -163,7 +172,8 @@ def parse_args():
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
     parser.add_argument('--num_positions', type=int, default=55, help='Number of positions for the window size')
-
+    parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
+    parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
 
 
@@ -179,4 +189,6 @@ if __name__ == '__main__':
         seq_len_mu=args.seq_len_mu,
         seq_len_var=args.seq_len_var,
         dim=args.dim,
-        num_layers=args.num_layers)
+        num_layers=args.num_layers,
+        store_path=args.store_path,
+        seed=args.seed)

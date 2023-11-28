@@ -8,8 +8,9 @@ def make_schedule(warmup_steps: int,
                   total_steps: int,
                   warmdown_steps: int,
                   max_lr: float,
-                  min_lr: float) -> Callable[[int], float]:
-    linear_schedule = make_linear_schedule(warmup_steps, max_lr, min_lr)
+                  min_lr: float,
+                  init_lr: float) -> Callable[[int], float]:
+    linear_schedule = make_linear_schedule(warmup_steps, max_lr, init_lr)
     cosine_schedule = make_cosine_schedule(warmdown_steps, max_lr, min_lr)
 
     def schedule(step: int) -> float:
