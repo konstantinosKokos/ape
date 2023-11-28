@@ -15,7 +15,6 @@ from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRel
 from unitaryPE.neural.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
-from torch.nn.functional import cross_entropy
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
@@ -92,48 +91,59 @@ def run(
             init_lr=1e-7))
 
     for epoch in range(num_epochs):
-        print(scheduler.get_last_lr())
-        correct, total, epoch_loss = 0, 0, 0
+        correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
         model.train()
         print(f'{epoch}')
         for (input_ids, output_ids, input_mask, output_mask, causal_mask) in train_dl:
-            loss, batch_correct, batch_total = model.go_batch(
+            loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
                 input_ids=input_ids,
                 output_ids=output_ids,
                 input_mask=input_mask,
                 output_mask=output_mask,
                 causal_mask=causal_mask)
-            correct += batch_correct
-            total += batch_total
+            correct_tokens += batch_correct_tokens
+            total_tokens += batch_total_tokens
+            correct_samples += batch_correct_samples
             epoch_loss += loss.item()
             loss.backward()
             optim.step()
             scheduler.step()
             optim.zero_grad()
-        print(f'train: {correct/total} -- ({epoch_loss})')
+        print(f'Train loss {epoch_loss}')
+        print(f'Train acc (token) {correct_tokens/total_tokens}')
+        print(f'Train acc (sample) {correct_samples/len(train_set)}')
         model.eval()
-        correct, total = 0, 0
-        with torch.no_grad():
-            for (input_ids, output_ids, input_mask, output_mask, causal_mask) in dev_dl:
-                _, batch_correct, batch_total = model.go_batch(
-                    input_ids=input_ids,
-                    output_ids=output_ids,
-                    input_mask=input_mask,
-                    output_mask=output_mask,
-                    causal_mask=causal_mask)
-                correct += batch_correct
-                total += batch_total
-            print(f'dev: {correct/total}')
-            for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
-                _, batch_correct, batch_total = model.go_batch(
-                    input_ids=input_ids,
-                    output_ids=output_ids,
-                    input_mask=input_mask,
-                    output_mask=output_mask,
-                    causal_mask=causal_mask)
-                correct += batch_correct
-                total += batch_total
-            print(f'test: {correct / total}')
+        correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
+        if (epoch > 0 and epoch % 5 == 0) or epoch > num_epochs // 2:
+            with torch.no_grad():
+                for (input_ids, output_ids, input_mask, output_mask, causal_mask) in dev_dl:
+                    loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
+                        input_ids=input_ids,
+                        output_ids=output_ids,
+                        input_mask=input_mask,
+                        output_mask=output_mask,
+                        causal_mask=causal_mask)
+                    correct_tokens += batch_correct_tokens
+                    total_tokens += batch_total_tokens
+                    correct_samples += batch_correct_samples
+                    epoch_loss += loss.item()
+                print(f'Dev loss {epoch_loss}')
+                print(f'Dev acc (token) {correct_tokens / total_tokens}')
+                print(f'Dev acc (sample) {correct_samples / len(dev_set)}')
+                for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
+                    loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
+                        input_ids=input_ids,
+                        output_ids=output_ids,
+                        input_mask=input_mask,
+                        output_mask=output_mask,
+                        causal_mask=causal_mask)
+                    correct_tokens += batch_correct_tokens
+                    total_tokens += batch_total_tokens
+                    correct_samples += batch_correct_samples
+                    epoch_loss += loss.item()
+                print(f'Test loss {epoch_loss}')
+                print(f'Test acc (token) {correct_tokens / total_tokens}')
+                print(f'Test acc (sample) {correct_samples / len(test_set)}')
         sys.stdout.flush()
     duration = time.time() - start_time
     print(f'Training took {duration} seconds.')

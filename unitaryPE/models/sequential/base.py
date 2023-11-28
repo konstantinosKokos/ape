@@ -1,20 +1,40 @@
+
 from torch.nn.functional import cross_entropy
+from torch import Tensor
 
 
 class Base:
-    def go_batch(self, input_ids, output_ids, input_mask, output_mask, causal_mask):
+    def go_batch(self,
+                 input_ids: Tensor,
+                 output_ids: Tensor,
+                 input_mask: Tensor,
+                 output_mask: Tensor,
+                 causal_mask: Tensor) -> tuple[Tensor, int, int, int]:
         preds = self.forward(
             encoder_ids=input_ids,
             encoder_mask=input_mask,
             decoder_ids=output_ids,
             decoder_mask=causal_mask,
             cross_mask=input_mask)
-        preds = preds[:, :-1][output_mask[:, 1:]]
-        output_ids = output_ids[:, 1:][output_mask[:, 1:]]
+
+        preds = preds[:, :-1]
+        output_ids = output_ids[:, 1:]
+
         loss = cross_entropy(
-            input=preds,
-            target=output_ids,
+            ignore_index=-1,
+            input=preds.flatten(0, -2),
+            target=output_ids.flatten(),
             reduction='mean')
-        correct = sum(preds.argmax(dim=-1).eq(output_ids)).item()
-        total = output_ids.numel()
-        return loss, correct, total
+
+        output_mask = ~output_mask[:, 1:]
+        num_masked_tokens = output_mask.sum()
+
+        sharp = preds.argmax(dim=-1).masked_fill_(output_mask, -1)
+
+        correct_tokens = (sharp.eq(output_ids))
+        correct_samples = correct_tokens.all(-1).sum()
+
+        return (loss,
+                (correct_tokens.sum() - num_masked_tokens).item(),
+                (output_ids.numel() - num_masked_tokens).item(),
+                correct_samples.item())
