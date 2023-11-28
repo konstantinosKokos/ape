@@ -118,9 +118,9 @@ def run(
         print(f'Train acc (token) {correct_tokens/total_tokens}')
         print(f'Train acc (sample) {correct_samples/len(train_set)}')
         model.eval()
-        correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
         if (epoch > 0 and epoch % 5 == 0) or epoch > num_epochs // 2:
             with torch.no_grad():
+                correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
                 for (input_ids, output_ids, input_mask, output_mask, causal_mask) in dev_dl:
                     loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
                         input_ids=input_ids,
@@ -138,6 +138,7 @@ def run(
                 if dev_acc > best_dev_acc and store_path is not None:
                     best_dev_acc = dev_acc
                     torch.save(model.state_dict(), store_path)
+                correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
                 for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
                     loss, batch_correct_tokens, batch_total_tokens, batch_correct_samples = model.go_batch(
                         input_ids=input_ids,
