@@ -94,7 +94,7 @@ def run(
             max_lr=5e-4,
             init_lr=1e-7))
 
-    best_dev_acc = -1e10
+    best_epoch, best_dev_acc = None, -1e10
     for epoch in range(num_epochs):
         correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
         model.train()
@@ -136,7 +136,7 @@ def run(
                 print(f'Dev acc (token) {(dev_acc := correct_tokens / total_tokens)}')
                 print(f'Dev acc (sample) {correct_samples / len(dev_set)}')
                 if dev_acc > best_dev_acc and store_path is not None:
-                    best_dev_acc = dev_acc
+                    best_epoch, best_dev_acc = epoch, dev_acc
                     torch.save(model.state_dict(), store_path)
                 correct_tokens, total_tokens, correct_samples, epoch_loss = 0, 0, 0, 0
                 for (input_ids, output_ids, input_mask, output_mask, causal_mask) in test_dl:
@@ -156,7 +156,7 @@ def run(
         print('-' * 64)
         sys.stdout.flush()
     duration = time.time() - start_time
-    print(f'Training took {duration} seconds.')
+    print(f'Training took {duration} seconds. Best epoch was {best_epoch}')
     sys.stdout.flush()
 
 
@@ -180,6 +180,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    print(args)
     run(model=Model[args.model],
         num_heads=args.num_heads,
         num_epochs=args.num_epochs,
