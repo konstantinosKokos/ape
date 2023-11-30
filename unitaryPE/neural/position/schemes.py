@@ -9,9 +9,9 @@ def applicative(
         mediator: tuple[Tensor, bool] | None = None) -> AtnFn:
     def wrapped(queries: Tensor, keys: Tensor, values: Tensor, mask: Tensor | None) -> Tensor:
         if q_maps is not None:
-            queries = torch.einsum('bqAh,bqAB->bqBh', queries, q_maps)
+            queries = torch.einsum('bqAh,bqhAB->bqBh', queries, q_maps)
         if k_maps is not None:
-            keys = torch.einsum('bkBh,bkAB->bkAh', keys, k_maps)
+            keys = torch.einsum('bkBh,bkhAB->bkAh', keys, k_maps)
         return multihead_atn_fn(queries, keys, values, mask, mediator=mediator)
     return wrapped
 

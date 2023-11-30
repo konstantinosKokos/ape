@@ -19,7 +19,7 @@ class SequentialUnitary(Module, Base):
         super(SequentialUnitary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = UnitarySequential(dim=dim//num_heads)
+        self.positional_encoder = UnitarySequential(dim=dim//num_heads, num_heads=num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(

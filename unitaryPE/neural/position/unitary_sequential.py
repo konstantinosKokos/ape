@@ -11,12 +11,13 @@ from .schemes import applicative, AtnFn, orthogonal_penalty
 
 
 class UnitarySequential(Module):
-    def __init__(self, dim: int) -> None:
+    def __init__(self, dim: int, num_heads: int) -> None:
         super(UnitarySequential, self).__init__()
         self.dim = dim
-        self.primitives = Parameter(normal(torch.empty(dim, dim)))
+        self.primitives = Parameter(normal(torch.empty(num_heads, dim, dim)))
         self._orthogonalize()
         self.maps = None
+        self.num_heads = num_heads
 
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
@@ -48,8 +49,9 @@ class UnitarySequential(Module):
         for _ in range(ceil(log2(size))):
             maps = self._expand_maps(maps)
         maps = maps[:size]
+        eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_heads, 1, 1)
         return torch.cat(
-            (torch.eye(self.dim, device=self.primitives.device).unsqueeze(0),
+            (eye[None],
              maps))
 
     def precompute(self, size: int) -> None:
