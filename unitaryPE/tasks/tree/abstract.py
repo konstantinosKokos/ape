@@ -179,6 +179,17 @@ def df_enum(tree: Tree[Node]) -> Tree[int]:
     return go(tree, 1)[0]
 
 
+def lvl_enum(tree: Tree[Node]) -> Tree[int]:
+    def go(_tree: Tree[Node], counter: int) -> Tree[int]:
+        match _tree:
+            case Leaf(_):
+                return Leaf(counter)
+            case Binary(_, left, right):
+                return Binary(counter, go(left, counter + 1), go(right, counter + 1))
+        raise TypeError
+    return go(tree, 1)
+
+
 def descendant_nodes(tree: Tree[Node]) -> Tree[list[Node]]:
     def go(_tree: Tree[Node], history: list[Node]) -> Tree[list[Node]]:
         match _tree:
@@ -188,4 +199,11 @@ def descendant_nodes(tree: Tree[Node]) -> Tree[list[Node]]:
     return go(tree, [])
 
 
-example_tree: Tree[int] = Binary(1, Binary(2, Leaf(4), Leaf(5)), Binary(3, Leaf(6), Leaf(7)))
+example_trees: list[Tree[int]] = [
+    Binary(1, Binary(2, Leaf(4), Leaf(5)), Binary(3, Leaf(6), Leaf(7))),
+    Leaf(1),
+    Binary(1, Leaf(2), Binary(3, Leaf(6), Leaf(7))),
+    Binary(1, Binary(2, Leaf(4), Leaf(5)), Leaf(3))
+]
+
+

@@ -7,17 +7,17 @@ from math import ceil, log2
 from torch.nn.init import normal_ as normal
 from torch.nn.utils.parametrizations import _Orthogonal, parametrize, _OrthMaps
 
-from .schemes import applicative, AtnFn, orthogonal_penalty
+from .schemes import applicative, AtnFn
 
 
 class UnitarySequential(Module):
     def __init__(self, dim: int, num_heads: int) -> None:
         super(UnitarySequential, self).__init__()
         self.dim = dim
+        self.num_heads = num_heads
         self.primitives = Parameter(normal(torch.empty(num_heads, dim, dim)))
         self._orthogonalize()
         self.maps = None
-        self.num_heads = num_heads
 
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
@@ -35,9 +35,6 @@ class UnitarySequential(Module):
                 orthogonal_map=_OrthMaps.matrix_exp,
                 use_trivialization=True),
             unsafe=True)
-
-    def penalty(self) -> Tensor:
-        return orthogonal_penalty(self.primitives)
 
     def _expand_maps(self, history: Tensor) -> Tensor:
         longest = history[-1]

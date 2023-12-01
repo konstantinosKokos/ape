@@ -1,3 +1,5 @@
+import pdb
+
 from torch.nn import Module
 from torch import Tensor
 import torch
@@ -20,7 +22,10 @@ class TreeUnitary(Module, Base):
         super(TreeUnitary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = UnitaryBranching(dim=dim//num_heads, branching_factor=branching_factor)
+        self.positional_encoder = UnitaryBranching(
+            dim=dim//num_heads,
+            branching_factor=branching_factor,
+            num_heads=num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(
@@ -38,11 +43,11 @@ class TreeUnitary(Module, Base):
         unique_enc_pos, inverse_x = encoder_pos.unique(return_inverse=True)
         unique_dec_pos, inverse_y = decoder_pos.unique(return_inverse=True)
         unique_pos, inverse_xy = torch.cat((unique_enc_pos, unique_dec_pos)).unique(return_inverse=True)
-        pos_maps = self.positional_encoder.forward(unique=unique_pos)
-        unique_enc_maps = self.positional_encoder.revert_mapping(pos_maps, inverse_xy[:len(unique_enc_pos)])
-        unique_dec_maps = self.positional_encoder.revert_mapping(pos_maps, inverse_xy[len(unique_enc_maps):])
-        enc_maps = self.positional_encoder.revert_mapping(unique_enc_maps, inverse_x)
-        dec_maps = self.positional_encoder.revert_mapping(unique_dec_maps, inverse_y)
+        self.positional_encoder.precompute(positions=unique_pos.cpu().tolist())
+        unique_enc_maps = self.positional_encoder.forward(inverse_xy[:len(unique_enc_pos)])
+        unique_dec_maps = self.positional_encoder.forward(inverse_xy[len(unique_enc_maps):])
+        enc_maps = unique_enc_maps[inverse_x]
+        dec_maps = unique_dec_maps[inverse_y]
 
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,

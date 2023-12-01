@@ -1,8 +1,18 @@
 from torch.nn.functional import cross_entropy
 from torch import Tensor
+from abc import abstractmethod, ABC
 
 
-class Base:
+class Base(ABC):
+    @abstractmethod
+    def forward(self,
+                encoder_ids: Tensor,
+                encoder_mask: Tensor,
+                decoder_ids: Tensor,
+                decoder_mask: Tensor,
+                cross_mask: Tensor) -> Tensor:
+        ...
+
     def go_batch(self,
                  input_ids: Tensor,
                  output_ids: Tensor,
