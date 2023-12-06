@@ -15,26 +15,23 @@ class UnitarySequential(Module):
         super(UnitarySequential, self).__init__()
         self.dim = dim
         self.num_heads = num_heads
-        self.primitives = Parameter(normal(torch.empty(num_heads, dim, dim)))
-        self._orthogonalize()
+        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim))
         self.maps = None
+
+    @property
+    def hermitian(self) -> Tensor:
+        return self._primitives - self._primitives.mH
+
+    @property
+    def primitives(self) -> Tensor:
+        hermitian = self.hermitian/self.dim
+        return torch.matrix_exp(hermitian)
 
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
 
     def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
         return applicative(q_maps, k_maps, mediator=mediator)
-
-    def _orthogonalize(self) -> None:
-        # orthogonal_(self.primitives)
-        parametrize.register_parametrization(
-            module=self,
-            tensor_name='primitives',
-            parametrization=_Orthogonal(
-                weight=self.primitives,
-                orthogonal_map=_OrthMaps.matrix_exp,
-                use_trivialization=True),
-            unsafe=True)
 
     def _expand_maps(self, history: Tensor) -> Tensor:
         longest = history[-1]

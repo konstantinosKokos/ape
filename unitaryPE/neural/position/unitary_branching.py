@@ -3,8 +3,6 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 from torch.nn import Module, Parameter
-from torch.nn.init import normal_ as normal
-from torch.nn.utils.parametrizations import _Orthogonal, parametrize, _OrthMaps
 from torch.nn.utils.rnn import pad_sequence
 
 from .schemes import applicative, AtnFn
@@ -16,10 +14,18 @@ class UnitaryBranching(Module):
         self.dim = dim
         self.num_heads = num_heads
         self.branching_factor = branching_factor
-        self.primitives: Parameter = Parameter(normal(torch.empty(branching_factor, dim, dim)))
-        self._orthogonalize()
+        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim))
         self.maps = None
         self._pos_to_path = {1: [], -1: []}
+
+    @property
+    def hermitian(self) -> Tensor:
+        return self._primitives - self._primitives.mH
+
+    @property
+    def primitives(self) -> Tensor:
+        hermitian = self.hermitian/self.dim
+        return torch.matrix_exp(hermitian)
 
     def forward(self, mapping: Tensor) -> Tensor:
         indices = torch.ravel(mapping)
@@ -28,16 +34,6 @@ class UnitaryBranching(Module):
 
     def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
         return applicative(q_maps, k_maps, mediator=mediator)
-
-    def _orthogonalize(self) -> None:
-        parametrize.register_parametrization(
-            module=self,
-            tensor_name='primitives',
-            parametrization=_Orthogonal(
-                weight=self.primitives,
-                orthogonal_map=_OrthMaps.matrix_exp,
-                use_trivialization=True),
-            unsafe=True)
 
     def precompute(self, positions: list[int]) -> None:
         path_words = pad_sequence(
@@ -48,12 +44,13 @@ class UnitaryBranching(Module):
             batch_first=True,
             padding_value=self.branching_factor + 1
         )
-        maps = torch.eye(n=self.dim, device=self.primitives.device).view(1, 1, self.dim, self.dim)
+        primitives = self.primitives
+        maps = torch.eye(n=self.dim, device=primitives.device).view(1, 1, self.dim, self.dim)
         maps = maps.repeat(len(path_words), self.num_heads, 1, 1)
         for depth in range(path_words.shape[1]):
             for k in range(self.branching_factor):
                 mask = path_words[:, depth] == k
-                maps[mask] = maps[mask] @ self.primitives[k]
+                maps[mask] = maps[mask] @ primitives[k]
         self.maps = maps
 
     def pos_to_path(self, idx: int) -> list[int]:
