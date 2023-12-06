@@ -14,9 +14,9 @@ class UnitaryBranching(Module):
         self.dim = dim
         self.num_heads = num_heads
         self.branching_factor = branching_factor
-        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim))
+        self._primitives = Parameter(torch.rand(self.branching_factor * self.num_heads + 1, self.dim, self.dim))
         self.maps = None
-        self._pos_to_path = {1: [], -1: []}
+        self._pos_to_path = {1: [], 0: [-1], -1: []}
 
     @property
     def hermitian(self) -> Tensor:
@@ -39,14 +39,18 @@ class UnitaryBranching(Module):
         path_words = pad_sequence(
             sequences=[
                 torch.tensor(self.pos_to_path(pos), device=self.primitives.device, dtype=torch.long)
-                if pos > 0 else torch.empty(0, device=self.primitives.device, dtype=torch.long)
+                # if pos > 0 else torch.empty(0, device=self.primitives.device, dtype=torch.long)
                 for pos in positions],
             batch_first=True,
             padding_value=self.branching_factor + 1
         )
         primitives = self.primitives
+        sos_repr = primitives[-1:]
+        primitives = primitives[:-1].unflatten(0, (self.branching_factor, self.num_heads))
         maps = torch.eye(n=self.dim, device=primitives.device).view(1, 1, self.dim, self.dim)
         maps = maps.repeat(len(path_words), self.num_heads, 1, 1)
+        sos_ptr = path_words[:, 0] == -1
+        maps[sos_ptr] = sos_repr
         for depth in range(path_words.shape[1]):
             for k in range(self.branching_factor):
                 mask = path_words[:, depth] == k

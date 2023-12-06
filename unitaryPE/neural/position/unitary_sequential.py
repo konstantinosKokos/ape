@@ -4,9 +4,6 @@ import torch
 from torch import Tensor
 from torch.nn import Module, Parameter
 from math import ceil, log2
-from torch.nn.init import normal_ as normal
-from torch.nn.utils.parametrizations import _Orthogonal, parametrize, _OrthMaps
-
 from .schemes import applicative, AtnFn
 
 
