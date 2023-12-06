@@ -47,21 +47,18 @@ class TreeUnitary(Module, Base):
         enc_maps = unique_enc_maps[inverse_x]
         dec_maps = unique_dec_maps[inverse_y]
 
-        encoder_depths = encoder_pos // 2
-        decoder_depths = decoder_pos // 2
-
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,
             k_maps=enc_maps,
-            mediator=(0.98 ** (encoder_depths[:, :, None] - encoder_depths[:, None]), True))
+            mediator=None)
         dec_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=dec_maps,
-            mediator=(0.98 ** (decoder_depths[:, :, None] - decoder_depths[:, None]), True))
+            mediator=None)
         cross_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=enc_maps,
-            mediator=(0.98 ** (decoder_depths[:, :, None] - encoder_depths[:, None]), True))
+            mediator=None)
 
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,
