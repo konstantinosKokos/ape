@@ -5,7 +5,7 @@ from .abstract import Tree, Node, Leaf, Binary, bf_enum, df_enum, breadth_first,
 import random
 from dataclasses import dataclass
 from abc import ABC, abstractmethod, ABCMeta
-from typing import Generic, Iterator, Callable, Literal
+from typing import Generic, Callable, Literal
 
 
 import torch
@@ -35,7 +35,7 @@ def make_processor(enc_traversal: Literal['breadth', 'depth'],
         input_nodes, input_pos = zip(*enc_traversal_fn(input_tree.zip(bf_enum(input_tree))))
         output_nodes, causal_mask = causal_mask_fn(output_tree.zip(bf_enum(output_tree)), dec_traversal_fn)
         output_nodes, output_pos = zip(*output_nodes)
-        return (input_nodes, input_pos), (output_nodes, output_pos), causal_mask
+        return (list(input_nodes), list(input_pos)), (list(output_nodes), list(output_pos)), causal_mask
     return process_sample
 
 
@@ -70,7 +70,20 @@ class TreeTask(ABC, metaclass=ABCMeta):
     y_projection: Literal['depth', 'breadth'] 
 
     def __post_init__(self):
-        self.process = make_processor(self.x_projection, self.y_projection)
+        self.preprocess = make_processor(self.x_projection, self.y_projection)
+
+    def preprocess(self, x: Tree[int], y: Tree[int]) -> tuple[tuple[list[int], list[int]],
+                                                              tuple[list[int], list[int]],
+                                                              list[list[bool]]]:
+        # just for type hinting purposes
+        ...
+
+    @abstractmethod
+    def process(self, x: Tree[int], y: Tree[int]) -> tuple[tuple[list[int], list[int]],
+                                                           tuple[list[int], list[int]],
+                                                           list[list[bool]]]:
+        # actually needs to be implemented by inheritors
+        ...
 
     @abstractmethod
     def sample(self, depth: int) -> TreeSample:

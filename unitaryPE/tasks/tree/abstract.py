@@ -199,6 +199,16 @@ def descendant_nodes(tree: Tree[Node]) -> Tree[list[Node]]:
     return go(tree, [])
 
 
+def flip(tree: Tree[Node]) -> Tree[Node]:
+    def go(_tree: Tree[Node]) -> Tree[Node]:
+        match _tree:
+            case Leaf(node):
+                return Leaf(node)
+            case Binary(node, left, right):
+                return Binary(node, right, left)
+    return go(tree)
+
+
 example_trees: list[Tree[int]] = [
     Binary(1, Binary(2, Leaf(4), Leaf(5)), Binary(3, Leaf(6), Leaf(7))),
     Leaf(1),
