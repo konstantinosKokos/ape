@@ -1,0 +1,27 @@
+--model Relative --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.42.p
+--model Relative --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.1312.p
+--model Relative --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.2310.p
+--model Relative --seed 42 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.42.p
+--model Relative --seed 1312 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.1312.p
+--model Relative --seed 2310 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.2310.p
+--model Relative --seed 42 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.42.p
+--model Relative --seed 1312 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.1312.p
+--model Relative --seed 2310 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.2310.p
+--model Unitary --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.42.p
+--model Unitary --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.1312.p
+--model Unitary --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.2310.p
+--model Unitary --seed 42 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.42.p
+--model Unitary --seed 1312 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.1312.p
+--model Unitary --seed 2310 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.2310.p
+--model Unitary --seed 42 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.42.p
+--model Unitary --seed 1312 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.1312.p
+--model Unitary --seed 2310 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.2310.p
+--model Sinusoidal --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.42.p
+--model Sinusoidal --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.1312.p
+--model Sinusoidal --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.2310.p
+--model Sinusoidal --seed 42 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.42.p
+--model Sinusoidal --seed 1312 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.1312.p
+--model Sinusoidal --seed 2310 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.2310.p
+--model Sinusoidal --seed 42 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.42.p
+--model Sinusoidal --seed 1312 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.1312.p
+--model Sinusoidal --seed 2310 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.2310.p
