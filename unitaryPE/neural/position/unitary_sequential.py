@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module, Parameter
 from math import ceil, log2
+
 from .schemes import applicative, AtnFn
 
 

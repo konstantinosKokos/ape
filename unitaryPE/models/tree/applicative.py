@@ -1,3 +1,5 @@
+import pdb
+
 from torch.nn import Module
 from torch import Tensor
 import torch
@@ -7,6 +9,14 @@ from ...neural.encoder import Encoder
 from ...neural.decoder import Decoder
 from ...neural.position import UnitaryBranching
 from ...neural.embedding import InvertibleEmbedding
+
+
+def index_steps(steps: Tensor, idx_x: Tensor, idx_y: Tensor) -> Tensor:
+    batch_size, num_rows = idx_x.shape
+    _, num_cols = idx_y.shape
+    row_index = idx_x.unsqueeze(-1).expand(batch_size, num_rows, num_cols)
+    col_index = idx_y.unsqueeze(-2).expand(batch_size, num_rows, num_cols)
+    return steps[row_index, col_index]
 
 
 class TreeUnitary(Module, Base):
@@ -42,23 +52,24 @@ class TreeUnitary(Module, Base):
         unique_dec_pos, inverse_y = decoder_pos.unique(return_inverse=True)
         unique_pos, inverse_xy = torch.cat((unique_enc_pos, unique_dec_pos)).unique(return_inverse=True)
         self.positional_encoder.precompute(positions=unique_pos.cpu().tolist())
-        unique_enc_maps = self.positional_encoder.forward(inverse_xy[:len(unique_enc_pos)])
-        unique_dec_maps = self.positional_encoder.forward(inverse_xy[len(unique_enc_maps):])
-        enc_maps = unique_enc_maps[inverse_x]
-        dec_maps = unique_dec_maps[inverse_y]
+        unique_maps, unique_steps = self.positional_encoder.maps
+        steps = unique_steps[inverse_xy.unsqueeze(-1), inverse_xy.unsqueeze(0)]
+        enc_maps = unique_maps[inverse_xy[:len(unique_enc_pos)]][inverse_x]
+        dec_maps = unique_maps[inverse_xy[len(unique_enc_pos):]][inverse_y]
+        inverse_y = inverse_y + inverse_x.max() + 1
 
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,
             k_maps=enc_maps,
-            mediator=None)
+            mediator=((0.98 ** steps[inverse_x.unsqueeze(-1), inverse_x.unsqueeze(-2)])[:, :, :, None, None], True))
         dec_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=dec_maps,
-            mediator=None)
+            mediator=((0.98 ** steps[inverse_y.unsqueeze(-1), inverse_y.unsqueeze(-2)])[:, :, :, None, None], True))
         cross_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=enc_maps,
-            mediator=None)
+            mediator=((0.98 ** steps[inverse_y.unsqueeze(-1), inverse_x.unsqueeze(-2)])[:, :, :, None, None], True))
 
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,
