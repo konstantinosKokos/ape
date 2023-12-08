@@ -25,3 +25,12 @@
 --model Sinusoidal --seed 42 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.42.p
 --model Sinusoidal --seed 1312 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.1312.p
 --model Sinusoidal --seed 2310 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.2310.p
+--model Rotary --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.42.p
+--model Rotary --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.1312.p
+--model Rotary --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.2310.p
+--model Rotary --seed 42 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.42.p
+--model Rotary --seed 1312 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.1312.p
+--model Rotary --seed 2310 --reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.2310.p
+--model Rotary --seed 42 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.42.p
+--model Rotary --seed 1312 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.1312.p
+--model Rotary --seed 2310 --num_repeats 2 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.2310.p
