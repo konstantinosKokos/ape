@@ -1,54 +1,59 @@
+"""
+    Adapted from https://github.com/huggingface/transformers/blob/v4.35.2/src/transformers/models/roformer/modeling_roformer.p
+"""
+
 from __future__ import annotations
+
 
 import torch
 from torch import Tensor
-from torch.nn import Module, Parameter
-from math import ceil, log2
-from .schemes import applicative, AtnFn
+from torch.nn import Embedding, Parameter
+
+from .schemes import AtnFn, multihead_atn_fn
 
 
-def make_angle_matrix(dim: int, base: int = 10000) -> Tensor:
-    angles = torch.arange(start=0, end=dim/2, step=1)/dim
-    angles = base ** (-2 * angles)
-    cos = torch.cos(angles)
-    cos = torch.repeat_interleave(cos, repeats=2)
-    sin = torch.sin(angles)
-    sin = torch.repeat_interleave(sin, 2)
-    sin[torch.arange(len(sin + 1)) % 2 == 1] = 0
-    r = torch.zeros(dim, dim)
-    r = r.diagonal_scatter(cos)
-    r = r.diagonal_scatter(sin[:-1], offset=-1)
-    r = r.diagonal_scatter(-sin[:-1], offset=1)
-    return r
+class Rotary(Embedding):
+    def __init__(self, num_positions: int, embedding_dim: int) -> None:
+        super().__init__(num_positions, embedding_dim)
+        self.weight = self._init_weight(self.weight)
 
+    @staticmethod
+    def _init_weight(out: Parameter) -> Parameter:
+        n_pos, dim = out.shape
+        position_enc = torch.tensor(
+            [[pos / (10000 ** (2 * (j // 2) / dim)) for j in range(dim)] for pos in range(n_pos)]
+        )
+        out.requires_grad = False
+        sentinel = dim // 2 if dim % 2 == 0 else (dim // 2) + 1
+        out[:, 0:sentinel] = torch.sin(position_enc[:, 0::2])
+        out[:, sentinel:] = torch.cos(position_enc[:, 1::2])
+        out.detach_()
+        return out
 
-class Rotary(Module):
-    def __init__(self, dim: int) -> None:
-        super(Rotary, self).__init__()
-        self.dim = dim
-        self.primitives = Parameter(make_angle_matrix(dim), requires_grad=False)
-        self.maps = None
-
-    def forward(self, position_ids: Tensor) -> Tensor:
-        return self.maps[position_ids][None]
-
-    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
-        return applicative(q_maps, k_maps, mediator=mediator)
-
-    def _expand_maps(self, history: Tensor) -> Tensor:
-        longest = history[-1]
-        expanded = history @ longest
-        return torch.cat((history, expanded), dim=0)
-
-    def _make_maps(self, size: int) -> Tensor:
-        maps = self.primitives.unsqueeze(0)
-        for _ in range(ceil(log2(size))):
-            maps = self._expand_maps(maps)
-        maps = maps[:size]
-        eye = torch.eye(self.dim, device=self.primitives.device)
-        return torch.cat(
-            (eye,
-             maps))
-
-    def precompute(self, size: int) -> None:
-        self.maps = self._make_maps(size)
+    @torch.no_grad()
+    def forward(self, max_seq_len: int) -> Tensor:
+        positions = torch.arange(
+            start=0,  end=max_seq_len, dtype=torch.long, device=self.weight.device
+        )
+        return super().forward(positions)
+    
+    def adjust_attention(self, sinusoidal_pos: Tensor) -> AtnFn:
+        def f(q, k, v, m, med = None) -> Tensor:
+            q, k = self.apply_rotary_position_embeddings(sinusoidal_pos, q, k)
+            return multihead_atn_fn(q, k, v, m, med)
+        return f
+    
+    @staticmethod
+    def apply_rotary_position_embeddings(sinusoidal_pos, query_layer, key_layer):
+        num_qs = query_layer.shape[1]
+        num_ks = key_layer.shape[1]
+        sin, cos = sinusoidal_pos.chunk(2, dim=-1)
+        sin_pos = torch.stack([sin, sin], dim=-1).reshape_as(sinusoidal_pos)
+        cos_pos = torch.stack([cos, cos], dim=-1).reshape_as(sinusoidal_pos)
+        rotate_half_query_layer = torch.stack([-query_layer[..., 1::2], query_layer[..., ::2]], dim=-1).reshape_as(
+            query_layer
+        )
+        query_layer = query_layer * cos_pos[None, :num_qs, :, None] + rotate_half_query_layer * sin_pos[None, :num_qs, :, None]
+        rotate_half_key_layer = torch.stack([-key_layer[..., 1::2], key_layer[..., ::2]], dim=-1).reshape_as(key_layer)
+        key_layer = key_layer * cos_pos[None, :num_ks, :, None] + rotate_half_key_layer * sin_pos[None, :num_ks, :, None]
+        return query_layer, key_layer

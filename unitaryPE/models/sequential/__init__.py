@@ -11,5 +11,5 @@ class Model(Enum):
     Relative = auto()
     Unitary = auto()
     Sinusoidal = auto()
-    # Rotary = auto()       # todo
+    Rotary = auto()       # todo
     # Absolute = auto()     # todo

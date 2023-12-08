@@ -11,7 +11,8 @@ import torch
 
 from unitaryPE.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
 from unitaryPE.tasks.sequence.batching import make_collator
-from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRelative, SequentialVanilla)
+from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRelative,
+                                         SequentialVanilla, SequentialRotary)
 from unitaryPE.neural.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -79,8 +80,12 @@ def run(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers).to('cuda')
-        case _:
-            raise ValueError
+        case Model.Rotary:
+            model = SequentialRotary(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers).to('cuda')
 
     steps_per_epoch = len(train_dl)
     optim = AdamW(model.parameters(), lr=1)
@@ -162,7 +167,7 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal'], help='Type of model to use')
+    parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary'], help='Type of model to use')
     parser.add_argument('--num_repeats', type=int, default=1, help='Number of repeats for SequenceRepeat task')
     parser.add_argument('--reverse', action='store_true', help='Use reverse for SequenceReverse task')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')

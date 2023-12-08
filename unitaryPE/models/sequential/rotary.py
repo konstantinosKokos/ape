@@ -19,7 +19,7 @@ class SequentialRotary(Module, Base):
         super(SequentialRotary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = Rotary(dim=dim//num_heads)
+        self.positional_encoder = Rotary(num_positions=200, embedding_dim=dim//num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(
@@ -34,26 +34,10 @@ class SequentialRotary(Module, Base):
         enc_len = encoder_ids.shape[1]
         dec_len = decoder_ids.shape[1]
         max_seq_len = max(enc_len, dec_len)
-        self.positional_encoder.precompute(max_seq_len)
-        positions = torch.arange(max_seq_len, device=decoder_input.device)[None, :]
-        distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
-        mediator = (0.98 ** distances.abs())
-
-        enc_maps = self.positional_encoder.forward(positions[:1, :encoder_ids.shape[1]])
-        dec_maps = self.positional_encoder.forward(positions[:1, :decoder_ids.shape[1]])
-        enc_atn_fn = self.positional_encoder.adjust_attention(
-            q_maps=enc_maps,
-            k_maps=enc_maps,
-            mediator=(mediator[:, :enc_len, :enc_len], True))
-        dec_atn_fn = self.positional_encoder.adjust_attention(
-            q_maps=dec_maps,
-            k_maps=dec_maps,
-            mediator=(mediator[:, :dec_len, :dec_len], True))
-        cross_atn_fn = self.positional_encoder.adjust_attention(
-            q_maps=dec_maps,
-            k_maps=enc_maps,
-            mediator=(mediator[:, :dec_len, :enc_len], True))
-
+        spos = self.positional_encoder.forward(max_seq_len)
+        enc_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        dec_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        cross_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,
             encoder_mask=encoder_mask,
