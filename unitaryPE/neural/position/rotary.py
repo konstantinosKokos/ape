@@ -38,9 +38,13 @@ class Rotary(Embedding):
         return super().forward(positions)
     
     def adjust_attention(self, sinusoidal_pos: Tensor) -> AtnFn:
-        def f(q, k, v, m, med = None) -> Tensor:
-            q, k = self.apply_rotary_position_embeddings(sinusoidal_pos, q, k)
-            return multihead_atn_fn(q, k, v, m, med)
+        def f(
+                queries: Tensor,
+                keys: Tensor,
+                values: Tensor,
+                mask: Tensor) -> Tensor:
+            queries, keys = self.apply_rotary_position_embeddings(sinusoidal_pos, queries, keys)
+            return multihead_atn_fn(queries, keys, values, mask, None)
         return f
     
     @staticmethod
