@@ -67,7 +67,7 @@ def run(
                 num_layers=num_layers,
                 branching_factor=2).to('cuda')
         case Model.ShivQuirk:
-            model = TreeUnitary(
+            model = ShivQuirk(
                 vocab_size=vocab_size + 2,
                 dim=dim,
                 num_heads=num_heads,
