@@ -1,6 +1,5 @@
 from torch.nn import Module
 from torch import Tensor
-import torch
 
 from .base import Base
 from ...neural.encoder import Encoder
@@ -19,7 +18,7 @@ class SequentialRotary(Module, Base):
         super(SequentialRotary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = Rotary(num_positions=200, embedding_dim=dim//num_heads)
+        self.positional_encoder = Rotary(num_positions=300, embedding_dim=dim//num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(
