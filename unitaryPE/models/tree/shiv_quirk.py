@@ -16,14 +16,15 @@ class ShivQuirk(Module, Base):
             dim: int,
             num_heads: int,
             num_layers: tuple[int, int],
-            branching_factor: int):
+            branching_factor: int,
+            max_depth: int):
         super(ShivQuirk, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
         self.positional_encoder = TreePE(
-            dim=dim//7//branching_factor,
+            dim=dim//max_depth//branching_factor,
             branching_factor=branching_factor,
-            max_depth=7)
+            max_depth=max_depth)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(

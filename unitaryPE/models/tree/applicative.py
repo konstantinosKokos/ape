@@ -1,5 +1,3 @@
-import pdb
-
 from torch.nn import Module
 from torch import Tensor
 import torch
@@ -33,7 +31,7 @@ class TreeUnitary(Module, Base):
         self.positional_encoder = UnitaryBranching(
             dim=dim//num_heads,
             branching_factor=branching_factor,
-            num_heads=num_heads)
+            num_heads=1)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(

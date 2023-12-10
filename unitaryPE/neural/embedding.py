@@ -17,6 +17,5 @@ class InvertibleEmbedding(Module):
     def embed(self, xs: Tensor) -> Tensor:
         return embedding(xs.clamp(min=0), self.weight) * sqrt(self.dim)
 
-
     def invert(self, xs: Tensor) -> Tensor:
         return linear(xs, self.weight)
