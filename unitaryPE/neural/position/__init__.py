@@ -4,3 +4,4 @@ from .sinusoidal import SinusoidalFlat
 from .relative import Relative
 from .rotary import Rotary
 from .absolute import Absolute
+from .unitary_grid import UnitaryGrid
