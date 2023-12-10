@@ -10,6 +10,8 @@ import argparse
 import torch
 
 from unitaryPE.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
+from unitaryPE.tasks.tree import TreeCopy, TreeReorder
+from unitaryPE.tasks.tree.batching import make_flat_collator
 from unitaryPE.tasks.sequence.batching import make_collator
 from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRelative,
                                          SequentialVanilla, SequentialRotary)
@@ -18,6 +20,8 @@ from torch.distributions import Normal
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
+
+from typing import Literal
 
 
 def run(
@@ -33,30 +37,43 @@ def run(
         dim: int,
         num_positions: int | None,
         store_path: str | None,
+        as_tree: bool = False,
+        regression: Literal['breadth', 'depth'] | None = None,
         seed: int = 42):
     start_time = time.time()
 
-    if num_repeats > 1 and reverse:
-        raise ValueError('No repeat-reverse')
-
-    if num_repeats > 1:
-        task = SequenceRepeat(vocab_size=vocab_size, num_repeats=num_repeats)
-    elif reverse:
-        task = SequenceReverse(vocab_size=vocab_size)
-    else:
-        task = SequenceCopy(vocab_size=vocab_size)
+    if num_repeats > 1 and (reverse or as_tree):
+        raise ValueError('No repeat-reverse/tree-repeat')
 
     train_len_dist = Normal(seq_len_mu, seq_len_var)
     test_len_dist = Normal(seq_len_mu, seq_len_var)
+
+    if not as_tree:
+        if num_repeats > 1:
+            task = SequenceRepeat(vocab_size=vocab_size, num_repeats=num_repeats)
+        elif reverse:
+            task = SequenceReverse(vocab_size=vocab_size)
+        else:
+            task = SequenceCopy(vocab_size=vocab_size)
+        post_proc = lambda x: x
+        collator = make_collator('cuda')
+    else:
+        # -- treat reverse as reorder, length as depth for the tree task
+        if reverse:
+            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+        else:
+            task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+        post_proc = lambda x: x.process()
+        collator = make_flat_collator('cuda')
 
     train_set, dev_set, test_set = task.make_sets(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
         num_samples=(10000, 1000, 1000),
         seed=42)  # keep this fixed for data consistency
 
-    train_dl = DataLoader(train_set, batch_size=64, collate_fn=make_collator('cuda'), shuffle=True)
-    dev_dl = DataLoader(dev_set, batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
-    test_dl = DataLoader(test_set, batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
+    train_dl = DataLoader(list(map(post_proc, train_set)), batch_size=64, collate_fn=collator, shuffle=True)
+    dev_dl = DataLoader(list(map(post_proc, dev_set)), batch_size=32, collate_fn=collator, shuffle=False)
+    test_dl = DataLoader(list(map(post_proc, test_set)), batch_size=32, collate_fn=collator, shuffle=False)
 
     torch.manual_seed(seed)
 
@@ -179,6 +196,8 @@ def parse_args():
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
     parser.add_argument('--num_positions', type=int, default=55, help='Number of positions for the window size')
     parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
+    parser.add_argument('--as_tree', action='store_true', help='Whether to generate tree samples')
+    parser.add_argument('--regression', type=str, choices=['breadth', 'depth'], default=None, help='Regression order for tree decoding')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
 
@@ -198,4 +217,6 @@ if __name__ == '__main__':
         dim=args.dim,
         num_layers=args.num_layers,
         store_path=args.store_path,
+        as_tree=args.as_tree,
+        regression=args.regression,
         seed=args.seed)
