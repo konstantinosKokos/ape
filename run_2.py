@@ -11,7 +11,7 @@ import torch
 
 from unitaryPE.tasks.tree import TreeCopy, TreeReorder
 from unitaryPE.tasks.tree.batching import make_collator
-from unitaryPE.models.tree import TreeUnitary, Model
+from unitaryPE.models.tree import TreeUnitary, ShivQuirk, Model
 from unitaryPE.neural.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -60,6 +60,13 @@ def run(
 
     match model:
         case Model.Unitary:
+            model = TreeUnitary(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                branching_factor=2).to('cuda')
+        case Model.ShivQuirk:
             model = TreeUnitary(
                 vocab_size=vocab_size + 2,
                 dim=dim,
@@ -155,7 +162,7 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Unitary'], help='Type of model to use')
+    parser.add_argument('--model', type=str, choices=['Unitary', 'ShivQuirk'], help='Type of model to use')
     parser.add_argument('--regression', type=str, default='breadth', choices=['breadth', 'depth'], help='Decoding order')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--tree_depth_mu', type=int, default=7, help='Mean tree depth')

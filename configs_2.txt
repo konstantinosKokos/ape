@@ -10,3 +10,15 @@
 --model Unitary --seed 42 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/Unitary.Reorder.Depth.42.p
 --model Unitary --seed 1312 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/Unitary.Copy.Reorder.Depth.1312.p
 --model Unitary --seed 2310 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/Unitary.Copy.Reorder.Depth.2310.p
+--model ShivQuirk --seed 42 --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Breadth.42.p
+--model ShivQuirk --seed 1312 --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Breadth.1312.p
+--model ShivQuirk --seed 2310 --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Breadth.2310.p
+--model ShivQuirk --seed 42 --reorder --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Reorder.Breadth.42.p
+--model ShivQuirk --seed 1312 --reorder --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Reorder.Breadth.1312.p
+--model ShivQuirk --seed 2310 --reorder --regression breadth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Reorder.Breadth.2310.p
+--model ShivQuirk --seed 42 --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Depth.42.p
+--model ShivQuirk --seed 1312 --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Depth.1312.p
+--model ShivQuirk --seed 2310 --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Depth.2310.p
+--model ShivQuirk --seed 42 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Reorder.Depth.42.p
+--model ShivQuirk --seed 1312 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Reorder.Depth.1312.p
+--model ShivQuirk --seed 2310 --reorder --regression depth --store_path /scratch/work/kogkalk1/models/tree/ShivQuirk.Copy.Reorder.Depth.2310.p
