@@ -30,8 +30,8 @@ class TreePE(Module):
         self.max_depth = max_depth
         self.branching_factor = branching_factor
         self.dim = dim
-        self.weight = Parameter(uniform_(torch.empty(dim, dtype=torch.float32), 0.7, 0.999), requires_grad=False)
-        self.paths = create_paths(self.max_depth, self.branching_factor)
+        self.weight = Parameter(uniform_(torch.empty(dim, dtype=torch.float32), 0.7, 0.999), requires_grad=True)
+        self.paths = Parameter(create_paths(self.max_depth, self.branching_factor), requires_grad=False)
 
     def forward(self, positions: Tensor) -> Tensor:
         positions = (positions - 1).clamp(min=0)
