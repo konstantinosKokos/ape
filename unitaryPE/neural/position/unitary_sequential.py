@@ -13,7 +13,7 @@ class UnitarySequential(Module):
         super(UnitarySequential, self).__init__()
         self.dim = dim
         self.num_heads = num_heads
-        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim))
+        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim).softmax(dim=-1).cumsum(-1))
         self.maps = None
 
     @property
@@ -22,7 +22,7 @@ class UnitarySequential(Module):
 
     @property
     def primitives(self) -> Tensor:
-        hermitian = self.hermitian/self.dim
+        hermitian = self.hermitian
         return torch.matrix_exp(hermitian)
 
     def forward(self, position_ids: Tensor) -> Tensor:

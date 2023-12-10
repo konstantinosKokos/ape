@@ -16,7 +16,8 @@ class UnitaryBranching(Module):
         self.dim = dim
         self.num_heads = num_heads
         self.branching_factor = branching_factor
-        self._primitives = Parameter(torch.rand(self.branching_factor * self.num_heads + 1, self.dim, self.dim))
+        self._primitives = Parameter(
+            torch.rand(self.branching_factor * self.num_heads + 1, self.dim, self.dim).softmax(dim=-1).cumsum(dim=-1))
         self.maps = None
         self._pos_to_path = {1: [], 0: [-1], -1: []}
 
@@ -26,7 +27,7 @@ class UnitaryBranching(Module):
 
     @property
     def primitives(self) -> Tensor:
-        hermitian = self.hermitian/self.dim
+        hermitian = self.hermitian
         return torch.matrix_exp(hermitian)
 
     def forward(self, mapping: Tensor) -> NoReturn:
