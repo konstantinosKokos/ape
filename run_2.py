@@ -50,11 +50,11 @@ def run(
         seed=42)  # keep this fixed for data consistency
 
     train_dl = DataLoader([sample.process() for sample in train_set],
-                          batch_size=64, collate_fn=make_collator('cpu'), shuffle=True)
+                          batch_size=64, collate_fn=make_collator('cuda'), shuffle=True)
     dev_dl = DataLoader([sample.process() for sample in dev_set],
-                        batch_size=32, collate_fn=make_collator('cpu'), shuffle=False)
+                        batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
     test_dl = DataLoader([sample.process() for sample in test_set],
-                         batch_size=32, collate_fn=make_collator('cpu'), shuffle=False)
+                         batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
 
     torch.manual_seed(seed)
 
@@ -65,7 +65,7 @@ def run(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,
-                branching_factor=2).to('cpu')
+                branching_factor=2).to('cuda')
         case Model.ShivQuirk:
             model = ShivQuirk(
                 vocab_size=vocab_size + 2,
@@ -73,7 +73,7 @@ def run(
                 num_heads=num_heads,
                 num_layers=num_layers,
                 branching_factor=2,
-                max_depth=8).to('cpu')
+                max_depth=8).to('cuda')
         case _:
             raise ValueError
 
