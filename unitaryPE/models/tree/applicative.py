@@ -31,7 +31,7 @@ class TreeUnitary(Module, Base):
         self.positional_encoder = UnitaryBranching(
             dim=dim//num_heads,
             branching_factor=branching_factor,
-            num_heads=1)
+            num_heads=num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
 
     def forward(
