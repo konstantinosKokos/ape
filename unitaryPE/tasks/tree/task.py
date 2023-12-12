@@ -67,7 +67,7 @@ class TreeGenerator(Generic[Node]):
 @dataclass
 class TreeTask(ABC, metaclass=ABCMeta):
     x_projection: Literal['depth', 'breadth']
-    y_projection: Literal['depth', 'breadth'] 
+    y_projection: Literal['depth', 'breadth']
 
     def __post_init__(self):
         self.preprocess = make_processor(self.x_projection, self.y_projection)
@@ -78,12 +78,17 @@ class TreeTask(ABC, metaclass=ABCMeta):
         # just for type hinting purposes
         ...
 
-    @abstractmethod
     def process(self, x: Tree[int], y: Tree[int]) -> tuple[tuple[list[int], list[int]],
                                                            tuple[list[int], list[int]],
                                                            list[list[bool]]]:
-        # actually needs to be implemented by inheritors
-        ...
+        (input_nodes, input_pos), (output_nodes, output_pos), causal_mask = self.preprocess(x, y)
+        input_nodes = [0] + input_nodes
+        input_pos = [0] + input_pos
+        output_nodes = [0] + output_nodes
+        output_pos = [0] + output_pos
+        causal_mask = [[True] + row for row in causal_mask]
+        sos_row = [True] + [False] * len(causal_mask)
+        return (input_nodes, input_pos), (output_nodes, output_pos), [sos_row] + causal_mask
 
     @abstractmethod
     def sample(self, depth: int) -> TreeSample:

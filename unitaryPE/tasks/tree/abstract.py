@@ -138,14 +138,16 @@ def combine_with(op: Node, lefts: set[Tree[Node]], rights: set[Tree[Node]]) -> s
     return {Binary(op, left, right) for left in lefts for right in rights}
 
 
-def make_eval(leaf_semantics: Callable[[str], T],
-              operator_semantics: Callable[[str], Callable[[T, T], T]]) -> Callable[[Tree[str]], T]:
-    def eval_tree(tree: Tree[str]) -> T:
+def make_step_eval(op_semantics: Callable[[Node, Node, Node], Node]):
+    def step_eval(tree: Tree[Node]) -> Tree[Node]:
         match tree:
-            case Leaf(value): return leaf_semantics(value)
-            case Binary(op, left, right): return operator_semantics(op)(eval_tree(left), eval_tree(right))
-        raise ValueError
-    return eval_tree
+            case Leaf(leaf):
+                return Leaf(leaf)
+            case Binary(op, Leaf(left), Leaf(right)):
+                return Leaf(op_semantics(op, left, right))
+            case Binary(op, left, right):
+                return Binary(op, step_eval(left), step_eval(right))
+    return step_eval
 
 
 def ambient(depth: int, value: Node) -> Tree[Node]:
@@ -215,5 +217,3 @@ example_trees: list[Tree[int]] = [
     Binary(1, Leaf(2), Binary(3, Leaf(6), Leaf(7))),
     Binary(1, Binary(2, Leaf(4), Leaf(5)), Leaf(3))
 ]
-
-
