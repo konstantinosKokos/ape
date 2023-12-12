@@ -9,7 +9,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from unitaryPE.tasks.tree import TreeCopy, TreeReorder
+from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3
 from unitaryPE.tasks.tree.batching import make_collator
 from unitaryPE.models.tree import TreeUnitary, ShivQuirk, Model
 from unitaryPE.neural.schedule import make_schedule
@@ -26,7 +26,7 @@ def run(
         vocab_size: int,
         tree_depth_mu: int,
         tree_depth_var: int,
-        reorder: bool,
+        task: Literal['copy', 'reorder', 'c3'],
         num_epochs: int,
         num_layers: tuple[int, int],
         num_heads: int,
@@ -36,10 +36,15 @@ def run(
         seed: int = 42):
     start_time = time.time()
 
-    if reorder:
-        task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
-    else:
-        task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+    match task:
+        case 'copy':
+            task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+        case 'reorder':
+            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+        case 'c3':
+            task = C3(x_projection='breadth', y_projection=regression)
+        case _:
+            raise ValueError
 
     train_depth_dist = Normal(tree_depth_mu, tree_depth_var)
     test_depth_dist = Normal(tree_depth_mu, tree_depth_var)
@@ -168,7 +173,7 @@ def parse_args():
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--tree_depth_mu', type=int, default=7, help='Mean tree depth')
     parser.add_argument('--tree_depth_var', type=int, default=1, help='Tree depth variance')
-    parser.add_argument('--reorder', action='store_true', help='Whether to reorder.')
+    parser.add_argument('--task', type=str, choices=['copy', 'reorder', 'c3'], help='Which task to train on')
     parser.add_argument('--num_epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
@@ -182,12 +187,12 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
     run(model=Model[args.model],
+        task=args.task,
         num_heads=args.num_heads,
         num_epochs=args.num_epochs,
         vocab_size=args.vocab_size,
         tree_depth_mu=args.tree_depth_mu,
         tree_depth_var=args.tree_depth_var,
-        reorder=args.reorder,
         dim=args.dim,
         num_layers=args.num_layers,
         store_path=args.store_path,

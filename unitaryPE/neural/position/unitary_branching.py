@@ -41,7 +41,6 @@ class UnitaryBranching(Module):
             path_words = pad_sequence(
                 sequences=[
                     torch.tensor(self.pos_to_path(pos), device=self.primitives.device, dtype=torch.short)
-                    # if pos > 0 else torch.empty(0, device=self.primitives.device, dtype=torch.long)
                     for pos in positions],
                 batch_first=True,
                 padding_value=self.branching_factor + 1

@@ -13,7 +13,7 @@ def make_collator(device: str = 'cpu'):
         inputs, outputs, masks = zip(*samples)
         input_ids, input_pos = zip(*inputs)
         output_ids, output_pos = zip(*outputs)
-        max_len = max(map(len, input_ids))
+        max_len = max(map(len, output_ids))
 
         def go(xs: list[list[int]]) -> Tensor:
             return pad_sequence([torch.tensor(x, dtype=torch.long) for x in xs], padding_value=-1, batch_first=True)
