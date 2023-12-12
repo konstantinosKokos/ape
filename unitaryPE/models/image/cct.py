@@ -46,5 +46,5 @@ class CCT(Module):
             encoder_mask=None,  # type: ignore
             atn_fn=atn_fn)
         gate = self.pooler(patch_values).softmax(dim=1)
-        aggr = gate * patch_values
+        aggr = (gate * patch_values).sum(dim=1)
         return self.fc(aggr)
