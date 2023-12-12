@@ -1,36 +1,36 @@
---model Unitary --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth 
---model Unitary --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Unitary --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Unitary --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Unitary --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Unitary --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Sinusoidal --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression breadth
---model Rotary --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Unitary --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth 
---model Unitary --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Unitary --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Unitary --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Unitary --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Unitary --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Sinusoidal --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 42 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 1312 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 2310 --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 42 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 1312 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
---model Rotary --seed 2310 --reverse --seq_len_mu 7 --seq_len_var 1 --as_tree --regression depth
+--model Unitary --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth 
+--model Unitary --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Unitary --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Unitary --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Unitary --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Unitary --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression breadth
+--model Rotary --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth 
+--model Unitary --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 42 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 1312 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 2310 --task tree-copy --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 42 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 1312 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Rotary --seed 2310 --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --regression depth

@@ -10,7 +10,7 @@ import argparse
 import torch
 
 from unitaryPE.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
-from unitaryPE.tasks.tree import TreeCopy, TreeReorder
+from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3
 from unitaryPE.tasks.tree.batching import make_flat_collator
 from unitaryPE.tasks.sequence.batching import make_collator
 from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRelative,
@@ -26,8 +26,7 @@ from typing import Literal
 
 def run(
         model: Model,
-        reverse: bool,
-        num_repeats: int,
+        task: Literal['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3'],
         vocab_size: int,
         seq_len_mu: int,
         seq_len_var: int,
@@ -37,34 +36,38 @@ def run(
         dim: int,
         num_positions: int | None,
         store_path: str | None,
-        as_tree: bool = False,
         regression: Literal['breadth', 'depth'] | None = None,
         seed: int = 42):
     start_time = time.time()
-
-    if num_repeats > 1 and (reverse or as_tree):
-        raise ValueError('No repeat-reverse/tree-repeat')
-
     train_len_dist = Normal(seq_len_mu, seq_len_var)
     test_len_dist = Normal(seq_len_mu, seq_len_var)
-
-    if not as_tree:
-        if num_repeats > 1:
-            task = SequenceRepeat(vocab_size=vocab_size, num_repeats=num_repeats)
-        elif reverse:
-            task = SequenceReverse(vocab_size=vocab_size)
-        else:
+    match task:
+        case 'copy':
             task = SequenceCopy(vocab_size=vocab_size)
-        post_proc = lambda x: x
-        collator = make_collator('cuda')
-    else:
-        # -- treat reverse as reorder, length as depth for the tree task
-        if reverse:
-            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
-        else:
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'repeat':
+            task = SequenceRepeat(vocab_size=vocab_size, num_repeats=2)
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'reverse':
+            task = SequenceReverse(vocab_size=vocab_size)
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'tree-copy':
             task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
-        post_proc = lambda x: x.process()
-        collator = make_flat_collator('cuda')
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'tree-reorder':
+            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'c3':
+            task = C3(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case _:
+            raise ValueError
 
     train_set, dev_set, test_set = task.make_sets(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
@@ -185,8 +188,7 @@ def run(
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary'], help='Type of model to use')
-    parser.add_argument('--num_repeats', type=int, default=1, help='Number of repeats for SequenceRepeat task')
-    parser.add_argument('--reverse', action='store_true', help='Use reverse for SequenceReverse task')
+    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-repeat', 'c3'], help='Which task to train on')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
     parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
@@ -196,7 +198,6 @@ def parse_args():
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
     parser.add_argument('--num_positions', type=int, default=55, help='Number of positions for the window size')
     parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
-    parser.add_argument('--as_tree', action='store_true', help='Whether to generate tree samples')
     parser.add_argument('--regression', type=str, choices=['breadth', 'depth'], default=None, help='Regression order for tree decoding')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
@@ -206,17 +207,15 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
     run(model=Model[args.model],
+        task=args.task,
         num_heads=args.num_heads,
         num_epochs=args.num_epochs,
         num_positions=args.num_positions,
-        num_repeats=args.num_repeats,
-        reverse=args.reverse,
         vocab_size=args.vocab_size,
         seq_len_mu=args.seq_len_mu,
         seq_len_var=args.seq_len_var,
         dim=args.dim,
         num_layers=args.num_layers,
         store_path=args.store_path,
-        as_tree=args.as_tree,
         regression=args.regression,
         seed=args.seed)
