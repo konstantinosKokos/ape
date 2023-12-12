@@ -63,7 +63,7 @@ def run(
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case 'c3':
-            task = C3(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
+            task = C3(x_projection='breadth', y_projection=regression)
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case _:
