@@ -188,7 +188,7 @@ def run(
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary'], help='Type of model to use')
-    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-repeat', 'c3'], help='Which task to train on')
+    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3'], help='Which task to train on')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
     parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
