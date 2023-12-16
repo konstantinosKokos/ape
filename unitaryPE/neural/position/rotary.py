@@ -41,10 +41,9 @@ class Rotary(Embedding):
         def f(
                 queries: Tensor,
                 keys: Tensor,
-                values: Tensor,
                 mask: Tensor) -> Tensor:
             queries, keys = self.apply_rotary_position_embeddings(sinusoidal_pos, queries, keys)
-            return multihead_atn_fn(queries, keys, values, mask, None)
+            return multihead_atn_fn(queries, keys, mask, None)
         return f
     
     @staticmethod
