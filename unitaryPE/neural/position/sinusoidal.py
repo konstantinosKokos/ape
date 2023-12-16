@@ -24,3 +24,24 @@ class SinusoidalFlat(Module):
         pe[:, 0::2] = torch.sin(positions * div_term)
         pe[:, 1::2] = torch.cos(positions * div_term)
         return pe
+
+
+class SinusoidalGrid(Module):
+    def __init__(self, dim: int, freq: int = 10000):
+        super(SinusoidalGrid, self).__init__()
+        self.dim = dim
+        self.freq = freq
+        self.precomputed = None
+
+    def forward(self, position_ids: Tensor):
+        (batch_size, max_len) = position_ids.shape[:2]
+        if self.precomputed is None or max_len > self.precomputed.shape[1]:
+            self.precomputed = self.precompute(max_len)
+        return self.precomputed.unsqueeze(0).to(position_ids.device)
+
+    def precompute(self, n: int) -> Tensor:
+        pe = torch.tensor([[p / (self.freq ** (2 * (i // 2) / self.dim)) for i in range(self.dim)]
+                           for p in range(n)])
+        pe[:, 0::2] = torch.sin(pe[:, 0::2])
+        pe[:, 1::2] = torch.cos(pe[:, 1::2])
+        return pe
