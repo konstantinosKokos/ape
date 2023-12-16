@@ -55,6 +55,8 @@ def run(
         distributions=(train_depth_dist, train_depth_dist, test_depth_dist),
         num_samples=(10000, 1000, 1000),
         seed=42)  # keep this fixed for data consistency
+    print(sum(t.x.numel() for t in train_set)/len(train_set))
+    print(sum(t.y.numel() for t in train_set) / len(train_set))
 
     train_dl = DataLoader([sample.process() for sample in train_set],
                           batch_size=64, collate_fn=make_collator('cuda'), shuffle=True)

@@ -65,13 +65,14 @@ class TreeGenerator(Generic[Node]):
 def random_tree(depth: int, leaves: list[Node], operators: list[Node]) -> Tree[Node]:
     if depth == 0:
         return Leaf(random.choice(leaves))
+
     random_depth = random.randint(0, depth - 1)
     fixed_depth = depth - 1 if random_depth < depth - 1 else random.randint(0, depth - 1)
     ldepth, rdepth = random.choice([(random_depth, fixed_depth), (fixed_depth, random_depth)])
     return Binary(
         random.choice(operators),
         random_tree(ldepth, leaves, operators),
-        random_tree(random_depth, leaves, operators))
+        random_tree(rdepth, leaves, operators))
 
 
 def random_tree_unique(
@@ -81,6 +82,7 @@ def random_tree_unique(
     if depth == 0:
         leaves.remove(leaf := random.choice(leaves))
         return Leaf(leaf), leaves, operators
+
     random_depth = random.randint(0, depth - 1)
     fixed_depth = depth - 1 if random_depth < depth - 1 else random.randint(0, depth - 1)
     ldepth, rdepth = random.choice([(random_depth, fixed_depth), (fixed_depth, random_depth)])
