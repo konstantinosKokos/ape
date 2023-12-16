@@ -56,7 +56,7 @@ class TreeGenerator(Generic[Node]):
         self.leaves = set(leaves)
         self.operators = set(operators)
 
-    def random_tree(self, depth: int, unique_nodes: bool) -> Tree[Node]:
+    def random_tree(self, depth: int, unique_nodes: bool = False) -> Tree[Node]:
         if unique_nodes:
             return random_tree_unique(depth, list(self.leaves), list(self.operators))[0]
         return random_tree(depth, list(self.leaves), list(self.operators))
