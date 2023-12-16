@@ -52,3 +52,21 @@
 --model Rotary --seed 42 --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth
 --model Rotary --seed 1312 --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth
 --model Rotary --seed 2310 --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth
+--model Unitary --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth 
+--model Unitary --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Unitary --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Unitary --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Unitary --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Unitary --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Sinusoidal --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Sinusoidal --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Rotary --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Rotary --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Rotary --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression breadth
+--model Rotary --seed 42 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Rotary --seed 1312 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
+--model Rotary --seed 2310 --task apply --seq_len_mu 6 --vocab_size 128 --seq_len_var 1 --regression depth
