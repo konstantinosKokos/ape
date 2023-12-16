@@ -53,16 +53,42 @@ def make_mask_fn(
 
 class TreeGenerator(Generic[Node]):
     def __init__(self, leaves: set[Node], operators: set[Node]):
-        self.leaves = list(leaves)
-        self.operators = list(operators)
+        self.leaves = set(leaves)
+        self.operators = set(operators)
 
-    def random_tree(self, depth: int) -> Tree[Node]:
-        if depth == 0:
-            return Leaf(random.choice(self.leaves))
-        return Binary(random.choice(self.operators),
-                      self.random_tree(ldepth := random.randint(0, depth - 1)),
-                      self.random_tree(depth - 1 if ldepth < (depth - 1) else random.randint(0, depth - 1)))
-        
+    def random_tree(self, depth: int, unique_nodes: bool = False) -> Tree[Node]:
+        if unique_nodes:
+            return random_tree_unique(depth, list(self.leaves), list(self.operators))[0]
+        return random_tree(depth, list(self.leaves), list(self.operators))
+
+
+def random_tree(depth: int, leaves: list[Node], operators: list[Node]) -> Tree[Node]:
+    if depth == 0:
+        return Leaf(random.choice(leaves))
+    random_depth = random.randint(0, depth - 1)
+    fixed_depth = depth - 1 if random_depth < depth - 1 else random.randint(0, depth - 1)
+    ldepth, rdepth = random.choice([(random_depth, fixed_depth), (fixed_depth, random_depth)])
+    return Binary(
+        random.choice(operators),
+        random_tree(ldepth, leaves, operators),
+        random_tree(random_depth, leaves, operators))
+
+
+def random_tree_unique(
+        depth: int,
+        leaves: list[Node],
+        operators: list[Node]) -> tuple[Tree[Node], list[Node], list[Node]]:
+    if depth == 0:
+        leaves.remove(leaf := random.choice(leaves))
+        return Leaf(leaf), leaves, operators
+    random_depth = random.randint(0, depth - 1)
+    fixed_depth = depth - 1 if random_depth < depth - 1 else random.randint(0, depth - 1)
+    ldepth, rdepth = random.choice([(random_depth, fixed_depth), (fixed_depth, random_depth)])
+    operators.remove(op := random.choice(operators))
+    left, leaves, operators = random_tree_unique(ldepth, leaves, operators)
+    right, leaves, operators = random_tree_unique(rdepth, leaves, operators)
+    return Binary(op, left, right), leaves, operators
+
 
 @dataclass
 class TreeTask(ABC, metaclass=ABCMeta):

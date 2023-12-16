@@ -9,7 +9,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3
+from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from unitaryPE.tasks.tree.batching import make_collator
 from unitaryPE.models.tree import TreeUnitary, ShivQuirk, Model
 from unitaryPE.neural.schedule import make_schedule
@@ -26,7 +26,7 @@ def run(
         vocab_size: int,
         tree_depth_mu: int,
         tree_depth_var: int,
-        task: Literal['copy', 'reorder', 'c3'],
+        task: Literal['copy', 'reorder', 'c3', 'apply'],
         num_epochs: int,
         num_layers: tuple[int, int],
         num_heads: int,
@@ -43,6 +43,8 @@ def run(
             task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)
         case 'c3':
             task = C3(x_projection='breadth', y_projection=regression)
+        case 'apply':
+            task = TreeApply(x_projection='breadth', y_projection=regression, vocab_size=vocab_size)
         case _:
             raise ValueError
 
@@ -173,7 +175,7 @@ def parse_args():
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--tree_depth_mu', type=int, default=7, help='Mean tree depth')
     parser.add_argument('--tree_depth_var', type=int, default=1, help='Tree depth variance')
-    parser.add_argument('--task', type=str, choices=['copy', 'reorder', 'c3'], help='Which task to train on')
+    parser.add_argument('--task', type=str, choices=['copy', 'reorder', 'c3', 'apply'], help='Which task to train on')
     parser.add_argument('--num_epochs', type=int, default=200, help='Number of training epochs')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
