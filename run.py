@@ -10,7 +10,7 @@ import argparse
 import torch
 
 from unitaryPE.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
-from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3
+from unitaryPE.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from unitaryPE.tasks.tree.batching import make_flat_collator
 from unitaryPE.tasks.sequence.batching import make_collator
 from unitaryPE.models.sequential import (Model, SequentialUnitary, SequentialRelative,
@@ -26,7 +26,7 @@ from typing import Literal
 
 def run(
         model: Model,
-        task: Literal['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3'],
+        task: Literal['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'],
         vocab_size: int,
         seq_len_mu: int,
         seq_len_var: int,
@@ -64,6 +64,10 @@ def run(
             collator = make_flat_collator('cuda')
         case 'c3':
             task = C3(x_projection='breadth', y_projection=regression)
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'apply':
+            task = TreeApply(x_projection='breadth', y_projection=regression, vocab_size=vocab_size)
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case _:
@@ -188,7 +192,7 @@ def run(
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary'], help='Type of model to use')
-    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3'], help='Which task to train on')
+    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'], help='Which task to train on')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
     parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
