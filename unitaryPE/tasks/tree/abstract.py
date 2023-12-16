@@ -21,6 +21,7 @@ class Tree(ABC, Generic[Node]):
     def numel(self) -> int: return numel(self)
     def infix(self) -> str: return infix(self)
     def zip(self, other: Tree[Other]) -> Tree[tuple[Node, Other]]: return self.zipwith(other, lambda x, y: (x, y))
+    def subtrees(self) -> list[Tree[Node]]: return subtrees(self)
 
     def zipwith(self, other: Tree[Other], _with: Callable[[Node, Other], T]) -> Tree[T]:
         return tree_zip(self, other, _with)
@@ -209,6 +210,16 @@ def flip(tree: Tree[Node]) -> Tree[Node]:
             case Binary(node, left, right):
                 return Binary(node, right, left)
     return go(tree)
+
+
+def subtrees(tree: Tree[Node]) -> list[Tree[Node]]:
+    match tree:
+        case Leaf(_):
+            return [tree]
+        case Binary(_, left, right):
+            return [tree, *subtrees(left), *subtrees(right)]
+        case _:
+            raise TypeError
 
 
 example_trees: list[Tree[int]] = [
