@@ -1,1 +1,1 @@
-from .cct import CCT
+from .cct import CCT, SinusoidalCCT
