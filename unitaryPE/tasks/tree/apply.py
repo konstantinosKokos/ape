@@ -4,12 +4,12 @@ from .abstract import flip, Binary, Leaf, Tree
 from random import choice
 
 
-def _truncate(tree: Tree[int], at: int) -> Tree[int]:
+def cut_at(tree: Tree[int], at: int) -> Tree[int]:
     if tree.node == at:
         return Leaf(at)
     match tree:
         case Binary(op, left, right):
-            return Binary(op, _truncate(left, at), _truncate(right, at))
+            return Binary(op, cut_at(left, at), cut_at(right, at))
         case Leaf(_):
             return tree
     raise TypeError
@@ -36,13 +36,13 @@ class TreeApply(TreeTask):
         op = choice(list(range(self.meta_ops)))
         match op:
             case 0:
-                y = flip(subtree)
-            case 1:
                 y = subtree
+            case 1:
+                y = flip(subtree)
             case 2:
-                y = x
+                y = cut_at(x, ptr)
             case 3:
-                y = _truncate(x, ptr)
+                y = x
             case _:
                 raise ValueError
         x = Binary(node=self.vocab_size - (self.meta_ops - op), left=Leaf(ptr), right=x)
