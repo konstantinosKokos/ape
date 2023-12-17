@@ -144,7 +144,7 @@ def run(
                 epoch_loss += loss.item()
                 total_correct += (preds.argmax(dim=-1) == target).sum()
             print(f'Test loss {epoch_loss}')
-            print(f'Accuracy (m) {(dev_acc := total_correct / len(test_set))}')
+            print(f'Dev acc (token) {(dev_acc := total_correct / len(test_set))}')
             if dev_acc > best_dev_acc and store_path is not None:
                 best_epoch, best_dev_acc = epoch, dev_acc
                 torch.save(model.state_dict(), store_path)

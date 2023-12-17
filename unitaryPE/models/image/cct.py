@@ -45,7 +45,6 @@ class CCT(Module):
         patch_values = self.patch_embed(pixel_values)
         h, w = patch_values.shape[-2], patch_values.shape[-2]
         patch_values = patch_values.permute(0, 2, 3, 1).flatten(1, 2)
-        print(patch_values.shape)
         x_pos = torch.arange(0, h, device=patch_values.device).unsqueeze(-1).expand(h, w).flatten()[None]
         y_pos = torch.arange(0, w, device=patch_values.device).unsqueeze(0).expand(h, w).flatten()[None]
         self.positional_encoder.precompute(max(h, w))
