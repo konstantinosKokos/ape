@@ -62,9 +62,9 @@ class UnitaryBranching(Module):
             mask = point_mask[:, None] & point_mask[None]
             pointwise_equal = path_words[:, None].eq(path_words[None])
             common_prefix = pointwise_equal.cumprod(-1).logical_and(mask)
-            max_lens = torch.max(point_mask.sum(-1)[:, None], point_mask.sum(-1)[None])
+            sum_lens = point_mask.sum(-1)[:, None] + point_mask.sum(-1)[None]
             cpl = common_prefix.sum(-1)
-            steps = max_lens - cpl
+            steps = sum_lens - 2 * cpl
         primitives = self.primitives
         sos_repr = primitives[-1:]
         primitives = primitives[:-1].unflatten(0, (self.branching_factor, self.num_heads))
