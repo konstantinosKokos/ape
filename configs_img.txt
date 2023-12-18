@@ -1,0 +1,9 @@
+--model Unitary --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Unitary.42.p --seed 42
+--model Unitary --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Unitary.2310.p --seed 2310
+--model Unitary --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Unitary.1312.p --seed 1312
+--model Sinusoidal --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Sinusoidal.42.p --seed 42
+--model Sinusoidal --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Sinusoidal.2310.p --seed 2310
+--model Sinusoidal --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Sinusoidal.1312.p --seed 1312
+--model Absolute --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Absolute.42.p --seed 42
+--model Absolute --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Absolute.2310.p --seed 2310
+--model Absolute --dataset cifar10 --data_dir /scratch/work/kogkalk1/data --store_path /scratch/work/kogkalk1/models/img/CIFAR10.Absolute.1312.p --seed 1312

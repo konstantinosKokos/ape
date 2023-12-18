@@ -1,6 +1,8 @@
 from torch.nn import Module, ModuleList, Sequential, Linear, ReLU, GELU, LayerNorm, Dropout
 from torch import Tensor
 from .attention import SelfMHA, AtnFn
+from .drop_path import DropPath
+
 from typing import Literal
 
 
@@ -21,6 +23,7 @@ class EncoderLayer(Module):
             dim: int,
             dropout_rate: float,
             weight_dropout: float,
+            drop_path: bool,
             mlp_ratio: int,
             activation: Literal['ReLU', 'GELU']) -> None:
         super(EncoderLayer, self).__init__()
@@ -28,7 +31,7 @@ class EncoderLayer(Module):
         self.ffn = Sequential(Linear(dim, mlp_ratio * dim), _get_activation(activation), Linear(mlp_ratio * dim, dim))
         self.mha_ln = LayerNorm(dim)
         self.ffn_ln = LayerNorm(dim)
-        self.dropout = Dropout(dropout_rate)
+        self.dropout = (DropPath if drop_path else Dropout)(dropout_rate)
 
     def forward(
             self,
@@ -41,6 +44,7 @@ class EncoderLayer(Module):
         mha = mha + encoder_input
         ffn = self.ffn_ln.forward(mha)
         ffn = self.ffn(ffn)
+        ffn = self.dropout(ffn)
         return ffn + mha
 
 
@@ -53,17 +57,19 @@ class Encoder(Module):
             dropout_rate: float = 0.15,
             weight_dropout: float = 0.,
             mlp_ratio: int = 4,
-            activation: Literal['ReLU', 'GELU'] = 'ReLU') -> None:
+            activation: Literal['ReLU', 'GELU'] = 'ReLU',
+            drop_path: bool = False) -> None:
         super(Encoder, self).__init__()
         self.encoder_layers = ModuleList(
             [EncoderLayer(
                 num_heads=num_heads,
                 dim=dim,
-                dropout_rate=dropout_rate,
+                dropout_rate=dropout_rate * depth if drop_path else dropout_rate,
                 weight_dropout=weight_dropout,
                 mlp_ratio=mlp_ratio,
-                activation=activation)
-             for _ in range(num_layers)])
+                activation=activation,
+                drop_path=drop_path)
+             for depth in range(num_layers)])
 
     def forward(
             self,

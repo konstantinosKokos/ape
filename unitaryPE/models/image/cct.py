@@ -1,9 +1,10 @@
 import torch
 from torch import Tensor
-from torch.nn import Module, Conv2d, Linear, MaxPool2d, Sequential
+from torch.nn import Module, Conv2d, Linear, MaxPool2d, Sequential, ReLU, Embedding
 
 from ...neural.encoder import Encoder
-from ...neural.position import UnitaryGrid
+from ...neural.position import UnitaryGrid, SinusoidalGrid
+from ...neural.attention import multihead_atn_fn
 
 
 class CCT(Module):
@@ -14,7 +15,8 @@ class CCT(Module):
             num_heads: int,
             in_channels: int,
             kernel_size: tuple[int, int],
-            num_classes: int):
+            num_classes: int,
+            mlp_ratio: int):
         super(CCT, self).__init__()
         self.patch_embed = Sequential(
             Conv2d(
@@ -24,8 +26,17 @@ class CCT(Module):
                 stride=(1, 1),
                 bias=False
             ),
+            ReLU(),
             MaxPool2d(kernel_size=kernel_size))
-        self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers, dim=dim)
+        self.encoder = Encoder(
+            num_heads=num_heads,
+            num_layers=num_layers,
+            dim=dim,
+            dropout_rate=0.1,
+            weight_dropout=0.1,
+            activation='GELU',
+            drop_path=True,
+            mlp_ratio=mlp_ratio)
         self.positional_encoder = UnitaryGrid(num_axes=2, num_heads=num_heads, dim=dim//(num_heads*2))
         self.pooler = Linear(dim, 1)
         self.fc = Linear(dim, num_classes)
@@ -45,6 +56,105 @@ class CCT(Module):
             encoder_input=patch_values,
             encoder_mask=None,  # type: ignore
             atn_fn=atn_fn)
+        gate = self.pooler(patch_values).softmax(dim=1)
+        aggr = (gate * patch_values).sum(dim=1)
+        return self.fc(aggr)
+
+
+class SinusoidalCCT(Module):
+    def __init__(
+            self,
+            dim: int,
+            num_layers: int,
+            num_heads: int,
+            in_channels: int,
+            kernel_size: tuple[int, int],
+            num_classes: int,
+            mlp_ratio: int):
+        super(SinusoidalCCT, self).__init__()
+        self.patch_embed = Sequential(
+            Conv2d(
+                in_channels=in_channels,
+                out_channels=dim,
+                kernel_size=kernel_size,
+                stride=(1, 1),
+                bias=False
+            ),
+            ReLU(),
+            MaxPool2d(kernel_size=kernel_size))
+        self.encoder = Encoder(
+            num_heads=num_heads,
+            num_layers=num_layers,
+            dim=dim,
+            dropout_rate=0.1,
+            weight_dropout=0.1,
+            activation='GELU',
+            drop_path=True,
+            mlp_ratio=mlp_ratio)
+        self.positional_encoder = SinusoidalGrid(dim=dim)
+        self.pooler = Linear(dim, 1)
+        self.fc = Linear(dim, num_classes)
+
+    def forward(self, pixel_values: Tensor) -> Tensor:
+        patch_values = self.patch_embed(pixel_values)
+        patch_values = patch_values.permute(0, 2, 3, 1).flatten(1, 2)
+        positions = torch.arange(0, patch_values.shape[1], device=patch_values.device)[None]
+        pos_emb = self.positional_encoder.forward(positions)
+        patch_values = patch_values + pos_emb
+        patch_values = self.encoder.forward(
+            encoder_input=patch_values,
+            encoder_mask=None,  # type: ignore
+            atn_fn=multihead_atn_fn)
+        gate = self.pooler(patch_values).softmax(dim=1)
+        aggr = (gate * patch_values).sum(dim=1)
+        return self.fc(aggr)
+
+
+class AbsoluteCCT(Module):
+    def __init__(
+            self,
+            dim: int,
+            num_layers: int,
+            num_heads: int,
+            in_channels: int,
+            kernel_size: tuple[int, int],
+            num_classes: int,
+            mlp_ratio: int,
+            num_embeddings: int):
+        super(AbsoluteCCT, self).__init__()
+        self.patch_embed = Sequential(
+            Conv2d(
+                in_channels=in_channels,
+                out_channels=dim,
+                kernel_size=kernel_size,
+                stride=(1, 1),
+                bias=False
+            ),
+            ReLU(),
+            MaxPool2d(kernel_size=kernel_size))
+        self.encoder = Encoder(
+            num_heads=num_heads,
+            num_layers=num_layers,
+            dim=dim,
+            dropout_rate=0.1,
+            weight_dropout=0.1,
+            activation='GELU',
+            drop_path=True,
+            mlp_ratio=mlp_ratio)
+        self.positional_encoder = Embedding(embedding_dim=dim, num_embeddings=num_embeddings)
+        self.pooler = Linear(dim, 1)
+        self.fc = Linear(dim, num_classes)
+
+    def forward(self, pixel_values: Tensor) -> Tensor:
+        patch_values = self.patch_embed(pixel_values)
+        patch_values = patch_values.permute(0, 2, 3, 1).flatten(1, 2)
+        positions = torch.arange(0, patch_values.shape[1], device=patch_values.device)[None]
+        pos_emb = self.positional_encoder.forward(positions)
+        patch_values = patch_values + pos_emb
+        patch_values = self.encoder.forward(
+            encoder_input=patch_values,
+            encoder_mask=None,  # type: ignore
+            atn_fn=multihead_atn_fn)
         gate = self.pooler(patch_values).softmax(dim=1)
         aggr = (gate * patch_values).sum(dim=1)
         return self.fc(aggr)
