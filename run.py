@@ -1,5 +1,4 @@
 import os
-import pdb
 import sys
 import time
 
@@ -77,7 +76,6 @@ def run(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
         num_samples=(10000, 1000, 1000),
         seed=42)  # keep this fixed for data consistency
-    pdb.set_trace()
 
     train_dl = DataLoader(list(map(post_proc, train_set)), batch_size=64, collate_fn=collator, shuffle=True)
     dev_dl = DataLoader(list(map(post_proc, dev_set)), batch_size=32, collate_fn=collator, shuffle=False)
