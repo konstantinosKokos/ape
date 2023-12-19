@@ -9,7 +9,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 
 import torch
 
-from unitaryPE.models.image import CCT, SinusoidalCCT, AbsoluteCCT
+from unitaryPE.models.image import UnitaryCCT, SinusoidalCCT, AbsoluteCCT, UnitarySeqCCT
 from unitaryPE.models.image.augmentations import CIFAR10Policy
 from unitaryPE.neural.schedule import make_schedule
 from torchvision.datasets import MNIST, CIFAR10, CIFAR100
@@ -22,7 +22,7 @@ from typing import Literal
 
 
 def run(
-        model: Literal['Unitary', 'Sinusoidal', 'Absolute'],
+        model: Literal['Unitary', 'Sinusoidal', 'Absolute', 'UnitarySeq'],
         num_epochs: int,
         num_layers: int,
         num_heads: int,
@@ -72,7 +72,7 @@ def run(
 
     match model:
         case 'Unitary':
-            model = CCT(
+            model = UnitaryCCT(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,
@@ -99,6 +99,15 @@ def run(
                 num_classes=num_classes,
                 mlp_ratio=mlp_ratio,
                 num_embeddings=image_size).cuda()
+        case 'UnitarySeq':
+            model = UnitarySeqCCT(
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                kernel_size=(3, 3),
+                in_channels=in_channels,
+                num_classes=num_classes,
+                mlp_ratio=mlp_ratio).cuda()
         case _:
             raise ValueError
 
@@ -156,7 +165,7 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Unitary', 'Sinusoidal', 'Absolute'], help='Type of model to use')
+    parser.add_argument('--model', type=str, choices=['Unitary', 'Sinusoidal', 'Absolute', 'UnitarySeq'], help='Type of model to use')
     parser.add_argument('--dataset', type=str, choices=['cifar10'], help='Which model to train on')
     parser.add_argument('--data_dir', type=str, help='Where is the data located')
     parser.add_argument('--num_epochs', type=int, default=300, help='Number of training epochs')
