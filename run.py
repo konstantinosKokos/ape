@@ -1,4 +1,5 @@
 import os
+import pdb
 import sys
 import time
 
@@ -34,7 +35,6 @@ def run(
         num_layers: tuple[int, int],
         num_heads: int,
         dim: int,
-        num_positions: int | None,
         store_path: str | None,
         regression: Literal['breadth', 'depth'] | None = None,
         seed: int = 42):
@@ -77,6 +77,7 @@ def run(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
         num_samples=(10000, 1000, 1000),
         seed=42)  # keep this fixed for data consistency
+    pdb.set_trace()
 
     train_dl = DataLoader(list(map(post_proc, train_set)), batch_size=64, collate_fn=collator, shuffle=True)
     dev_dl = DataLoader(list(map(post_proc, dev_set)), batch_size=32, collate_fn=collator, shuffle=False)
@@ -91,7 +92,7 @@ def run(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,
-                window_size=num_positions).to('cuda')
+                window_size=seq_len_mu).to('cuda')
         case Model.Unitary:
             model = SequentialUnitary(
                 vocab_size=vocab_size + 2,
@@ -200,7 +201,6 @@ def parse_args():
     parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
-    parser.add_argument('--num_positions', type=int, default=55, help='Number of positions for the window size')
     parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
     parser.add_argument('--regression', type=str, choices=['breadth', 'depth'], default=None, help='Regression order for tree decoding')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
@@ -214,7 +214,6 @@ if __name__ == '__main__':
         task=args.task,
         num_heads=args.num_heads,
         num_epochs=args.num_epochs,
-        num_positions=args.num_positions,
         vocab_size=args.vocab_size,
         seq_len_mu=args.seq_len_mu,
         seq_len_var=args.seq_len_var,
