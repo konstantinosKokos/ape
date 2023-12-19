@@ -190,7 +190,7 @@ class UnitarySeqCCT(Module):
             activation='GELU',
             drop_path=True,
             mlp_ratio=mlp_ratio)
-        self.positional_encoder = UnitarySequential(dim=dim, num_heads=num_heads)
+        self.positional_encoder = UnitarySequential(dim=dim//num_heads, num_heads=num_heads)
         self.pooler = Linear(dim, 1)
         self.fc = Linear(dim, num_classes)
 
