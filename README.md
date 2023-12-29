@@ -33,6 +33,7 @@ to use as an extra argument in their forward pass. The pipeline is as follows:
    (see `unitaryPE.nn.positions.schemes` if writing your own)
 3. pass the attention function on the Transformer encoder, where you can propagate it across layers or apply it once
    (see `unitaryPE.nn.encoder` for instance)
+
 Concrete end-to-end examples in `eval.models` -- navigate to the modality of interest.
 
 Alternatively, you may want to consider tying each Transformer layer to its own positional encoder / attention function.
