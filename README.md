@@ -10,8 +10,8 @@ We examine and provide implementations for the following cases:
 We have $`α(q, k) = qW^dk`$ where $`W`$ is a parameterized orthogonal matrix and $`d`$ is the relative distance
 between the query and the key.
 * **Grids**. 
-We have $`a(q, k) = q (W_1^{d_1} \oplus W_2^{d_2} \oplus \dots) k`$ where $`W_i`$ is an orthogonal matrix and
-$`d_i`$ the distance between query and key on axis $`i`$.  
+We have $`a(q, k) = q (W_1^{d_1} \oplus W_2^{d_2} \oplus \dots) k`$ where $`W_i`$ is an orthogonal matrix,
+$`d_i`$ the distance between query and key on axis $`i`$ and $`\oplus`$ the matrix direct sum.  
 * **Trees**. 
 We have $`α(q, k) = q(W_{|p[0]|}^{\mathrm{sgn}(p[0])}W_{|p[1]|}^{\mathrm{sgn}(p[1])}...W_{|p[t]|}^{\mathrm{sgn}(p[t])})k`$ 
 where $`W`$ is a 4-dimensional tensor containing an orthogonal matrix for each tree branch, 
