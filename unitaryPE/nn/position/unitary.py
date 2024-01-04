@@ -46,7 +46,8 @@ class UnitaryBranching(Module):
     def forward(self, mapping: Tensor) -> NoReturn:
         raise NotImplementedError('You have to index the precomputed maps by hand')
 
-    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
+    @staticmethod
+    def adjust_attention(q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
         return applicative(q_maps, k_maps, mediator=mediator)
 
     def precompute(self, positions: list[int]) -> None:
@@ -104,22 +105,22 @@ class UnitaryGrid(Module):
         maps_y = maps_y.squeeze(1)
         return maps_x[xs], maps_y[ys]
 
+    @staticmethod
     def adjust_attention(
-            self,
             q_maps: tuple[Tensor, Tensor],
             k_maps: tuple[Tensor, Tensor],
             mediator: tuple[Tensor, bool] | None) -> AtnFn:
         return grid_applicative(q_maps, k_maps, mediator=mediator)
 
-    def _expand_maps(self, history: Tensor) -> Tensor:
-        longest = history[-1]
-        expanded = history @ longest
-        return torch.cat((history, expanded), dim=0)
-
     def _make_maps(self, size: int) -> Tensor:
+        def expand(history: Tensor) -> Tensor:
+            longest = history[-1]
+            expanded = history @ longest
+            return torch.cat((history, expanded), dim=0)
+
         maps = self.primitives.unsqueeze(0)
         for _ in range(ceil(log2(size))):
-            maps = self._expand_maps(maps)
+            maps = expand(maps)
         maps = maps[:size]
         eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_axes * self.num_heads, 1, 1)
         maps = torch.cat((eye[None], maps))
@@ -149,18 +150,19 @@ class UnitarySequential(Module):
     def forward(self, position_ids: Tensor) -> Tensor:
         return self.maps[position_ids]
 
-    def adjust_attention(self, q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
+    @staticmethod
+    def adjust_attention(q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
         return applicative(q_maps, k_maps, mediator=mediator)
 
-    def _expand_maps(self, history: Tensor) -> Tensor:
-        longest = history[-1]
-        expanded = history @ longest
-        return torch.cat((history, expanded), dim=0)
-
     def _make_maps(self, size: int) -> Tensor:
+        def expand(history: Tensor) -> Tensor:
+            longest = history[-1]
+            expanded = history @ longest
+            return torch.cat((history, expanded), dim=0)
+
         maps = self.primitives.unsqueeze(0)
         for _ in range(ceil(log2(size))):
-            maps = self._expand_maps(maps)
+            maps = expand(maps)
         maps = maps[:size]
         eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_heads, 1, 1)
         return torch.cat(
