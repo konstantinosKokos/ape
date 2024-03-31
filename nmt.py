@@ -115,6 +115,7 @@ def run(
                                 reduction='sum').item()
                             numels += output_ids.ne(-1).sum().item()
                     print(f'{updates}:{train_rml}:{dev_loss/numels}')
+                    sys.stdout.flush()
                     model.train()
 
                 if updates % save_every == 0:
