@@ -191,4 +191,4 @@ if __name__ == '__main__':
         num_heads=args.num_heads,
         num_layers=args.num_layers,
         seed=args.seed,
-        flip=True)
+        flip=False)
