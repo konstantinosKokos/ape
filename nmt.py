@@ -95,7 +95,7 @@ def run(
                                 target_ids=output_ids,
                                 causal_mask=causal_mask,
                                 reduction='sum').item()
-                            numels += sum(output_ids.ne(-1))
+                            numels += output_ids.ne(-1).sum().item()
                     print(f'{updates}:{train_rml}:{dev_loss/numels}')
                     model.train()
 
