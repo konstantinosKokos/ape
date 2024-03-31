@@ -200,7 +200,7 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    run(model=args.model,
+    run(model=Model[args.model],
         dim=args.dim,
         max_updates=args.num_updates,
         batch_size=args.batch_size,
