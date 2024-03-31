@@ -9,7 +9,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from eval.models.nmt import Model, MTUnitary, MTVanilla
+from eval.models.nmt import Model, MTUnitary  # MTVanilla
 from eval.tasks.nmt import make_collator, Dataloader, load_datasets, read_vocab, devectorize
 
 
