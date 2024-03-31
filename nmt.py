@@ -9,7 +9,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from eval.models.nmt import Model, MTUnitary  # MTVanilla
+from eval.models.nmt import Model, MTUnitary, MTVanilla
 from eval.tasks.nmt import make_collator, Dataloader, load_datasets, read_vocab, devectorize
 
 
@@ -17,8 +17,11 @@ from unitaryPE.nn.schedule import make_schedule
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
+from typing import Literal
+
 
 def run(
+        model: Model,
         data_path: str,
         store_path: str,
         num_layers: tuple[int, int],
@@ -38,14 +41,29 @@ def run(
     train_dl, dev_dl, test_dl = map(Dataloader, (train_set, dev_set, test_set))
     collator = make_collator('cuda')
 
-    model = MTUnitary(
-        vocab_size=32000,
-        num_layers=num_layers,
-        dim=dim,
-        num_heads=num_heads,
-        sos_token_id=sos_token_id,
-        eos_token_id=eos_token_id
-    ).cuda()
+    match model:
+        case Model.Unitary:
+            model = MTUnitary(
+                vocab_size=32000,
+                num_layers=num_layers,
+                dim=dim,
+                num_heads=num_heads,
+                sos_token_id=sos_token_id,
+                eos_token_id=eos_token_id
+            )
+        case Model.Sinusoidal:
+            model = MTVanilla(
+                vocab_size=32000,
+                num_layers=num_layers,
+                dim=dim,
+                num_heads=num_heads,
+                sos_token_id=sos_token_id,
+                eos_token_id=eos_token_id
+            )
+        case _:
+            raise ValueError
+
+    model = model.cuda()
 
     print(f'Effective batch size: {batch_size * update_every}')
 
@@ -163,6 +181,7 @@ def eval(model_paths: list[str],
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
+    parser.add_argument('--model', type=str, choices=['Unitary', 'Sinusoidal'], help='Type of model to use')
     parser.add_argument('--vocab_size', type=int, default=32000, help='Size of vocabulary')
     parser.add_argument('--num_updates', type=int, default=15000, help='Total number of parameter updates')
     parser.add_argument('--batch_size', type=int, default=8000, help='Batch size (forward)')
@@ -181,7 +200,8 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    run(dim=512,
+    run(model=args.model,
+        dim=args.dim,
         max_updates=args.num_updates,
         batch_size=args.batch_size,
         update_every=args.update_every,
