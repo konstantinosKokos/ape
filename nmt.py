@@ -92,7 +92,7 @@ def run(
             max_lr=5e-4,
             init_lr=1e-7))
 
-    steps, updates, train_rml = 0, 0, 0
+    steps, updates, train_rml = 0, 0, None
     while updates < max_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
@@ -106,7 +106,7 @@ def run(
             )
             loss.backward()
 
-            train_rml = loss.item() if train_rml is None else (0.98 * train_rml + 0.02 * loss.item())
+            train_rml = loss.detach() if train_rml is None else (0.98 * train_rml + 0.02 * loss.detach())
 
             if steps % update_every == 0:
                 updates += 1
@@ -115,9 +115,8 @@ def run(
                 optim.zero_grad(set_to_none=True)
 
             if rank == 0 and updates % 50 == 0:
-                train_rml_tensor = torch.tensor(train_rml, device=rank)
-                dist.all_reduce(train_rml_tensor)
-                train_rml = train_rml_tensor.item() / world_size
+                dist.all_reduce(train_rml)
+                train_rml = train_rml.item() / world_size
 
                 dev_loss, numels = 0., 0
                 model.eval()
@@ -132,11 +131,11 @@ def run(
                             causal_mask=causal_mask,
                             reduction='sum').item()
                         numels += output_ids.ne(-1).sum().item()
-                print(f'{updates}:{train_rml}:{dev_loss/numels}')
+                print(f'{updates}:{train_rml.item()}:{dev_loss/numels}')
                 sys.stdout.flush()
                 model.train()
 
-                if rank == 0 and updates % save_every == 0:
+                if updates % save_every == 0:
                     torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
 
     dist.destroy_process_group()
