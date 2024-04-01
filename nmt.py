@@ -49,7 +49,7 @@ def run(
         seed: int = 42
 ):
     start_time = time.time()
-    train_set = load_datasets(data_path, subsets=('train',))
+    train_set, = load_datasets(data_path, subsets=('train',))
     train_set = split_ds(train_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
     train_dl = Dataloader(train_set)
