@@ -20,12 +20,14 @@ from torch import distributed as dist
 from torch import multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel
 
+from datetime import timedelta
+
 
 def ddp_setup(rank: int, world_size: int) -> None:
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
     torch.cuda.set_device(rank)
-    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size)
+    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=2))
 
 
 def run(
@@ -33,6 +35,7 @@ def run(
         world_size: int,
         model: Model,
         store_path: str,
+        data_path: str,
         num_layers: tuple[int, int],
         dim: int,
         num_heads: int,
@@ -40,8 +43,6 @@ def run(
         batch_size: int,
         update_every: int,
         save_every: int,
-        train_set: list[PairSample],
-        dev_set: list[PairSample],
         flip: bool = True,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
@@ -49,6 +50,13 @@ def run(
 ):
     start_time = time.time()
     ddp_setup(rank, world_size)
+
+    smoke_test = torch.tensor(rank, device=rank)
+    print(f'{smoke_test} @ {rank}')
+    smoke_test = dist.all_reduce(smoke_test, device=rank)
+    print(f'{smoke_test} @ {rank}')
+
+    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
     train_set = split_ds(train_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
     sys.stdout.flush()
@@ -167,14 +175,13 @@ if __name__ == '__main__':
     print(f'Effective batch size: {args.batch_size * args.update_every * world_size}')
     sys.stdout.flush()
 
-    train_set, dev_set, _ = load_datasets(args.data_path)
-
     mp.spawn(
         run,
         nprocs=world_size,
         args=(
             world_size,
             Model[args.model],
+            args.data_path,
             args.store_path,
             args.num_layers,
             args.dim,
@@ -183,7 +190,5 @@ if __name__ == '__main__':
             args.batch_size,
             args.update_every,
             args.save_every,
-            train_set,
-            dev_set
         )
     )
