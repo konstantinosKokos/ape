@@ -49,10 +49,10 @@ def run(
 ):
     start_time = time.time()
     ddp_setup(rank, world_size)
+    train_set = split_ds(train_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
     sys.stdout.flush()
 
-    train_set = split_ds(train_set, world_size, rank)
     train_dl = Dataloader(train_set)
     collator = make_collator(rank)
 

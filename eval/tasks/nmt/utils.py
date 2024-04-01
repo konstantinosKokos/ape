@@ -69,7 +69,7 @@ def vectorize_files(path: str, vocab_path: str) -> None:
 PairSample = tuple[list[int], list[int]]
 
 
-def load_datasets(path: str, subsets: set[str] = frozenset(['train', 'dev', 'test'])) -> Iterable[list[PairSample]]:
+def load_datasets(path: str, subsets: tuple[str, ...] = ('train', 'dev', 'test')) -> Iterable[list[PairSample]]:
     for subset in subsets:
         with open(f'{path}/{subset}.en.vec', 'rb') as f:
             src = pickle.load(f)
