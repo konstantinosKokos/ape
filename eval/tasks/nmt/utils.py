@@ -79,6 +79,11 @@ def load_datasets(path: str, subsets: set[str] = frozenset(['train', 'dev', 'tes
         yield pairs
 
 
+def split_ds(dataset: list[PairSample], world_size: int, rank: int) -> list[PairSample]:
+    dataset = sorted(dataset, key=lambda pair: sum(map(len, pair)))
+    return dataset[rank::world_size]
+
+
 class Dataloader:
     def __init__(self, dataset: list[PairSample]):
         self.dataset = dataset
@@ -111,7 +116,7 @@ class Dataloader:
             yield batch
 
 
-def make_collator(device: str = 'cpu'):
+def make_collator(device: str | int = 'cpu'):
     def collate_fn(
             samples: list[PairSample]) -> tuple[Tensor, Tensor, Tensor, Tensor]:
         input_ids = pad_sequence([torch.tensor(src, dtype=torch.long) for src, _ in samples], batch_first=True, padding_value=-1)

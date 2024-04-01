@@ -5,22 +5,32 @@ import time
 if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not None:
     sys.path.append(os.environ['SLURM_SUBMIT_DIR'])
 
-
 import argparse
 import torch
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla
-from eval.tasks.nmt import make_collator, Dataloader, load_datasets, read_vocab, devectorize
-
+from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
 
 from unitaryPE.nn.schedule import make_schedule
+
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
-from typing import Literal
+from torch import distributed as dist
+from torch import multiprocessing as mp
+from torch.nn.parallel import DistributedDataParallel
+
+
+def ddp_setup(rank: int, world_size: int) -> None:
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
+    torch.cuda.set_device(rank)
+    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size)
 
 
 def run(
+        rank: int,
+        world_size: int,
         model: Model,
         data_path: str,
         store_path: str,
@@ -36,10 +46,15 @@ def run(
         eos_token_id: int = 1,
         seed: int = 42
 ):
+
     start_time = time.time()
-    train_set, dev_set, test_set = load_datasets(data_path)
-    train_dl, dev_dl, test_dl = map(Dataloader, (train_set, dev_set, test_set))
-    collator = make_collator('cuda')
+    ddp_setup(rank, world_size)
+    print(rank)
+
+    train_set, dev_set, _ = load_datasets(data_path)
+    train_set = split_ds(train_set, world_size, rank)
+    train_dl = Dataloader(train_set)
+    collator = make_collator(rank)
 
     match model:
         case Model.Unitary:
@@ -63,9 +78,8 @@ def run(
         case _:
             raise ValueError
 
-    model = model.cuda()
-
-    print(f'Effective batch size: {batch_size * update_every}')
+    model = DistributedDataParallel(model, device_ids=[rank])
+    print(f'Effective batch size: {batch_size * update_every * world_size}')
 
     torch.manual_seed(seed)
     optim = AdamW(model.parameters(), lr=1)
@@ -101,9 +115,10 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
-                if updates % 50 == 0:
+                if rank == 0 and updates % 50 == 0:
                     dev_loss, numels = 0., 0
                     model.eval()
+                    dev_dl = Dataloader(dev_set)
                     with torch.no_grad():
                         for (input_ids, output_ids, input_mask, causal_mask) \
                                 in map(collator, dev_dl.get_batches(batch_size=batch_size, flip=flip)):
@@ -118,66 +133,10 @@ def run(
                     sys.stdout.flush()
                     model.train()
 
-                if updates % save_every == 0:
-                    torch.save(model.state_dict(), f'{store_path}/{updates//save_every}.chk')
+                if rank == 0 and updates % save_every == 0:
+                    torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
 
-
-def eval(model_paths: list[str],
-         data_path: str = '/home/kokos/Projects/tree_PE/eval/tasks/nmt/data/bpe',
-         vocab_path: str = '/home/kokos/Projects/tree_PE/vocab.txt',
-         dim: int = 512,
-         num_heads: int = 8,
-         sos_token_id: int = 0,
-         eos_token_id: int = 1,
-         num_layers: tuple[int, int] = (6, 6),
-         flip: bool = True):
-
-    model = MTUnitary(
-        dim=dim,
-        num_heads=num_heads,
-        num_layers=num_layers,
-        sos_token_id=sos_token_id,
-        eos_token_id=eos_token_id,
-        vocab_size=32000,
-    )
-
-    dev_set, test_set = load_datasets(data_path, subsets={'dev', 'test'})
-    dev_dl, test_dl = map(Dataloader, (dev_set, test_set))
-    collator = make_collator('cpu')
-
-    vocab = read_vocab(vocab_path)
-    ivocab = {v: k for k, v in vocab.items()}
-
-    model: MTUnitary
-    for path in model_paths:
-        model.load_state_dict(torch.load(path, map_location='cpu'))
-        model.eval()
-        model.source_pe.precompute(500)
-        model.target_pe.precompute(500)
-
-        with torch.no_grad():
-            loss = 0.
-            for (input_ids, output_ids, input_mask, causal_mask) \
-                    in map(collator, dev_dl.get_batches(batch_size=1000, flip=flip, shuffle=False)):
-                loss = model.go_batch(
-                    source_ids=input_ids,
-                    target_ids=output_ids,
-                    source_mask=input_mask,
-                    causal_mask=causal_mask).item() * 0.02 + loss * 0.98
-            print(loss)
-            exit()
-                # beams, _ = model.forward_dev(
-                #     source_ids=input_ids,
-                #     source_mask=input_mask,
-                #     max_decode_length=2 * input_ids.size(1),
-                #     beam_width=1)
-                # beams = beams.cpu().tolist()
-                # print(beams.shape, input_ids.shape)
-                # beams = beams.cpu().tolist()
-                # tokens = [[devectorize(beam, ivocab, False) for beam in sample]
-                #           for sample in beams]
-                # print(tokens)
-                # exit()
+    dist.destroy_process_group()
 
 
 def parse_args():
@@ -201,15 +160,22 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
 
-    run(model=Model[args.model],
-        dim=args.dim,
-        max_updates=args.num_updates,
-        batch_size=args.batch_size,
-        update_every=args.update_every,
-        save_every=args.save_every,
-        data_path=args.data_path,
-        store_path=args.store_path,
-        num_heads=args.num_heads,
-        num_layers=args.num_layers,
-        seed=args.seed,
-        flip=False)
+    world_size = torch.cuda.device_count()
+
+    mp.spawn(
+        run,
+        nprocs=world_size,
+        args=(
+            world_size,
+            Model[args.model],
+            args.data_path,
+            args.store_path,
+            args.num_layers,
+            args.dim,
+            args.num_heads,
+            args.num_updates,
+            args.batch_size,
+            args.update_every,
+            args.save_every,
+        )
+    )
