@@ -27,7 +27,7 @@ def ddp_setup(rank: int, world_size: int) -> None:
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
     torch.cuda.set_device(rank)
-    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=2))
+    dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=4))
 
 
 def run(
@@ -49,20 +49,21 @@ def run(
         seed: int = 42
 ):
     start_time = time.time()
+    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
+    train_set = split_ds(train_set, world_size, rank)
+    print(f'{start_time} -- {rank} -- {len(train_set)}')
+    train_dl = Dataloader(train_set)
+    collator = make_collator(rank)
+
+    sys.stdout.flush()
+
     ddp_setup(rank, world_size)
 
     smoke_test = torch.tensor(rank, device=rank)
     print(f'{smoke_test} @ {rank}')
     dist.all_reduce(smoke_test)
     print(f'{smoke_test} @ {rank}')
-
-    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
-    train_set = split_ds(train_set, world_size, rank)
-    print(f'{start_time} -- {rank} -- {len(train_set)}')
     sys.stdout.flush()
-
-    train_dl = Dataloader(train_set)
-    collator = make_collator(rank)
 
     torch.manual_seed(seed)
 
