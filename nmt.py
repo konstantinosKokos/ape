@@ -49,12 +49,11 @@ def run(
         seed: int = 42
 ):
     start_time = time.time()
-    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
+    train_set = load_datasets(data_path, subsets=('train',))
     train_set = split_ds(train_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
     train_dl = Dataloader(train_set)
     collator = make_collator(rank)
-
     sys.stdout.flush()
 
     ddp_setup(rank, world_size)
@@ -124,29 +123,16 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
-                if rank == 0 and updates % 50 == 0:
-                    dist.all_reduce(train_rml)
-                    train_rml = train_rml.item() / world_size
+            if updates > 0 and updates % 50 == 0:
+                dist.all_reduce(train_rml)
+                train_rml = train_rml.item() / world_size
 
-                    dev_loss, numels = 0., 0
-                    model.eval()
-                    dev_dl = Dataloader(dev_set)
-                    with torch.no_grad():
-                        for (input_ids, output_ids, input_mask, causal_mask) \
-                                in map(collator, dev_dl.get_batches(batch_size=batch_size, flip=flip)):
-                            dev_loss += model.module.go_batch(
-                                source_ids=input_ids,
-                                source_mask=input_mask,
-                                target_ids=output_ids,
-                                causal_mask=causal_mask,
-                                reduction='sum').item()
-                            numels += output_ids.ne(-1).sum().item()
-                    print(f'{updates}:{train_rml}:{dev_loss/numels}')
+                if rank == 0:
+                    print(f'{updates}:{train_rml.item()}')
                     sys.stdout.flush()
-                    model.train()
 
-                if updates % save_every == 0:
-                    torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
+            if rank == 0 and updates > 0 and updates % save_every == 0:
+                torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
 
     dist.destroy_process_group()
 
