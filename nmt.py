@@ -51,9 +51,9 @@ def run(
     start_time = time.time()
     ddp_setup(rank, world_size)
 
-    smoke_test = torch.tensor(rank)
+    smoke_test = torch.tensor(rank, device=rank)
     print(f'{smoke_test} @ {rank}')
-    smoke_test = dist.all_reduce(smoke_test, device=rank)
+    smoke_test = dist.all_reduce(smoke_test)
     print(f'{smoke_test} @ {rank}')
 
     train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
@@ -181,8 +181,8 @@ if __name__ == '__main__':
         args=(
             world_size,
             Model[args.model],
-            args.data_path,
             args.store_path,
+            args.data_path,
             args.num_layers,
             args.dim,
             args.num_heads,
