@@ -9,7 +9,7 @@ import argparse
 import torch
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla
-from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
+from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader, PairSample
 
 from unitaryPE.nn.schedule import make_schedule
 
@@ -32,7 +32,6 @@ def run(
         rank: int,
         world_size: int,
         model: Model,
-        data_path: str,
         store_path: str,
         num_layers: tuple[int, int],
         dim: int,
@@ -41,6 +40,8 @@ def run(
         batch_size: int,
         update_every: int,
         save_every: int,
+        train_set: list[PairSample],
+        dev_set: list[PairSample],
         flip: bool = True,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
@@ -48,10 +49,9 @@ def run(
 ):
     start_time = time.time()
     ddp_setup(rank, world_size)
-    print(f'{start_time} -- {rank}')
+    print(f'{start_time} -- {rank} -- {len(train_set)}')
     sys.stdout.flush()
 
-    train_set, dev_set, _ = load_datasets(data_path)
     train_set = split_ds(train_set, world_size, rank)
     train_dl = Dataloader(train_set)
     collator = make_collator(rank)
@@ -79,7 +79,6 @@ def run(
             raise ValueError
 
     model = DistributedDataParallel(model.to(rank), device_ids=[rank])
-    print(f'Effective batch size: {batch_size * update_every * world_size}')
 
     torch.manual_seed(seed)
     optim = AdamW(model.parameters(), lr=1)
@@ -115,27 +114,27 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
+            if rank == 0 and updates % 50 == 0:
                 train_rml_tensor = torch.tensor(train_rml, device=rank)
                 dist.all_reduce(train_rml_tensor)
                 train_rml = train_rml_tensor.item() / world_size
 
-                if rank == 0 and updates % 50 == 0:
-                    dev_loss, numels = 0., 0
-                    model.eval()
-                    dev_dl = Dataloader(dev_set)
-                    with torch.no_grad():
-                        for (input_ids, output_ids, input_mask, causal_mask) \
-                                in map(collator, dev_dl.get_batches(batch_size=batch_size, flip=flip)):
-                            dev_loss += model.module.go_batch(
-                                source_ids=input_ids,
-                                source_mask=input_mask,
-                                target_ids=output_ids,
-                                causal_mask=causal_mask,
-                                reduction='sum').item()
-                            numels += output_ids.ne(-1).sum().item()
-                    print(f'{updates}:{train_rml}:{dev_loss/numels}')
-                    sys.stdout.flush()
-                    model.train()
+                dev_loss, numels = 0., 0
+                model.eval()
+                dev_dl = Dataloader(dev_set)
+                with torch.no_grad():
+                    for (input_ids, output_ids, input_mask, causal_mask) \
+                            in map(collator, dev_dl.get_batches(batch_size=batch_size, flip=flip)):
+                        dev_loss += model.module.go_batch(
+                            source_ids=input_ids,
+                            source_mask=input_mask,
+                            target_ids=output_ids,
+                            causal_mask=causal_mask,
+                            reduction='sum').item()
+                        numels += output_ids.ne(-1).sum().item()
+                print(f'{updates}:{train_rml}:{dev_loss/numels}')
+                sys.stdout.flush()
+                model.train()
 
                 if rank == 0 and updates % save_every == 0:
                     torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
@@ -165,6 +164,10 @@ if __name__ == '__main__':
     print(args)
 
     world_size = torch.cuda.device_count()
+    print(f'Effective batch size: {args.batch_size * args.update_every * world_size}')
+    sys.stdout.flush()
+
+    train_set, dev_set, _ = load_datasets(args.data_path)
 
     mp.spawn(
         run,
@@ -172,7 +175,6 @@ if __name__ == '__main__':
         args=(
             world_size,
             Model[args.model],
-            args.data_path,
             args.store_path,
             args.num_layers,
             args.dim,
@@ -181,5 +183,7 @@ if __name__ == '__main__':
             args.batch_size,
             args.update_every,
             args.save_every,
+            train_set,
+            dev_set
         )
     )
