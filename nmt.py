@@ -46,10 +46,10 @@ def run(
         eos_token_id: int = 1,
         seed: int = 42
 ):
-
     start_time = time.time()
     ddp_setup(rank, world_size)
-    print(rank)
+    print(f'{start_time} -- {rank}')
+    sys.stdout.flush()
 
     train_set, dev_set, _ = load_datasets(data_path)
     train_set = split_ds(train_set, world_size, rank)
