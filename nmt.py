@@ -115,6 +115,10 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
+                train_rml_tensor = torch.tensor(train_rml, device=rank)
+                dist.all_reduce(train_rml_tensor)
+                train_rml = train_rml_tensor.item() / world_size
+
                 if rank == 0 and updates % 50 == 0:
                     dev_loss, numels = 0., 0
                     model.eval()
