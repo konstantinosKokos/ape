@@ -78,7 +78,7 @@ def run(
         case _:
             raise ValueError
 
-    model = DistributedDataParallel(model, device_ids=[rank])
+    model = DistributedDataParallel(model.to(rank), device_ids=[rank])
     print(f'Effective batch size: {batch_size * update_every * world_size}')
 
     torch.manual_seed(seed)
