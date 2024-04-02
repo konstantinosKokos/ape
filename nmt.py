@@ -30,6 +30,10 @@ def ddp_setup(rank: int, world_size: int) -> None:
     dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=4))
 
 
+def argmax(xs: list[float]) -> int:
+    return max(list(range(len(xs))), key=lambda i: xs[i])
+
+
 def run(
         rank: int,
         world_size: int,
@@ -42,7 +46,7 @@ def run(
         max_updates: int,
         batch_size: int,
         update_every: int,
-        save_every: int,
+        num_checkpoints: int,
         flip: bool = True,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
@@ -100,7 +104,7 @@ def run(
             warmup_steps=4000)
     )
 
-    steps, updates, train_rml = 0, 0, None
+    dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
     while updates < max_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
@@ -143,14 +147,20 @@ def run(
                         dev_loss /= numels
                         dist.all_reduce(dev_loss)
                         dev_loss /= world_size
-                    model.train()
+                        dev_losses.append(dev_loss.item())
+                        model.train()
 
                     if rank == 0:
                         print(f'{updates}:{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
-                if rank == 0 and updates > 0 and updates % save_every == 0:
-                    torch.save(model.module.state_dict(), f'{store_path}/{updates//save_every}.chk')
+                        if argmax(dev_losses) <= len(dev_losses) - 10:
+                            exit(1)
+
+                        if argmax(dev_losses) == len(dev_losses):
+                            print(f'Saving {checkpoint} at {updates}.')
+                            torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
+                            checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
 
     dist.destroy_process_group()
 
@@ -162,7 +172,7 @@ def parse_args():
     parser.add_argument('--num_updates', type=int, default=15000, help='Total number of parameter updates')
     parser.add_argument('--batch_size', type=int, default=8000, help='Batch size (forward)')
     parser.add_argument('--update_every', type=int, default=40, help='Frequency of backward steps')
-    parser.add_argument('--save_every', type=int, default=500, help='Frequency of model checkpointing')
+    parser.add_argument('--num_checkpoints', type=int, default=10, help='How many checkpoints to store')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
@@ -191,7 +201,7 @@ if __name__ == '__main__':
             args.num_layers,
             args.dim,
             args.num_heads,
-            args.num_updates,
+            args.num_checkpoints,
             args.batch_size,
             args.update_every,
             args.save_every,
