@@ -45,5 +45,6 @@ def make_cosine_schedule(decay_steps: int, max_lr: float, min_lr: float) -> Call
 
 def make_transformer_schedule(dim: int, warmup_steps: int):
     def schedule(step: int) -> float:
+        step += 1
         return dim ** -0.5 * min(step ** -0.5, step * warmup_steps ** -1.5)
     return schedule
