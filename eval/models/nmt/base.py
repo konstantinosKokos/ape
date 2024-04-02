@@ -1,3 +1,5 @@
+import pdb
+
 import torch
 from torch.nn.functional import cross_entropy
 from torch import Tensor
@@ -45,7 +47,7 @@ class Base(ABC):
 
 
 def beam_active(eos_token_id: int, beam_paths: Tensor) -> Tensor:
-    return beam_paths.ne(eos_token_id).any(dim=-1)
+    return beam_paths.eq(eos_token_id).any(dim=-1).logical_not()
 
 
 def beam_search(
@@ -56,26 +58,29 @@ def beam_search(
         eos_token_id: int,
 ):
     # Currently active beams
-    active_mask = beam_active(eos_token_id, beam_paths).unsqueeze(-1)
+    active_mask = beam_active(eos_token_id, beam_paths)
     # Mask out inactive beams, except for the EOS token
     predictions[active_mask.logical_not()] = -1e08
-    predictions[active_mask.logical_not()][eos_token_id] = 0.
+    predictions[active_mask.logical_not().unsqueeze(-1) & (torch.arange(32000).view(1, -1) == eos_token_id)] = 0.
     # Get best k predictions for each batch/beam combination
     per_beam_values, per_beam_indices = torch.topk(predictions, k=beam_width, dim=-1)
     # Calculate accumulated scores for each beam path
     accumulated_scores = per_beam_values + beam_scores.unsqueeze(-1)
     # Flatten beam dimension
-    accumulated_scores = accumulated_scores.view(-1, beam_width ** 2)
+    accumulated_scores = accumulated_scores.flatten(1, -1)
     # Get topk indices
     topk_values, topk_indices = torch.topk(accumulated_scores, k=beam_width, dim=-1)
     # Revert indexing
     origins = topk_indices // beam_width
     choices = topk_indices % beam_width
-    # Construct new paths
+
+    # # Construct new paths
     paths = torch.gather(beam_paths, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_paths.size(-1)))
-    steps = torch.gather(per_beam_indices, dim=2, index=choices.unsqueeze(-1))
+    steps = torch.gather(per_beam_indices, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_width))
+    steps = torch.gather(steps, dim=2, index=choices.unsqueeze(-1))
     paths = torch.cat((paths, steps), dim=-1)
     beam_scores = topk_values
+
     return paths, beam_scores
 
 

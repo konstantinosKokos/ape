@@ -1,3 +1,5 @@
+import pdb
+
 from .base import Base, make_decoder_mask, beam_active, beam_search
 
 from torch.nn import Module
@@ -149,6 +151,10 @@ class MTUnitary(Module, Base):
 
         decoder_preds = self.embedding.invert(decoder_step)
         decoder_preds = log_softmax(decoder_preds, dim=-1).view(-1, beam_width, self.vocab_size)
+
+        if current_step == 1:
+            decoder_preds[:, 1:] = -1e08
+
         paths, scores = beam_search(
             predictions=decoder_preds,
             beam_paths=beam_paths,

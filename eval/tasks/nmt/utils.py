@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from typing import Iterable
 from random import randint
 from math import sqrt, ceil
+from itertools import takewhile
 
 import torch
 
@@ -49,7 +50,7 @@ def vectorize(line: str, vocab: dict[str, int], wrap: bool) -> list[int]:
 def devectorize(tokens: list[int], ivocab: dict[int, str], unwrap: bool) -> str:
     subwords = [ivocab[token] for token in tokens]
     if unwrap:
-        subwords = subwords[1:-1]
+        subwords = takewhile(lambda sw: sw != '<EOS>', subwords[1:])
     return ' '.join(subwords)
 
 
