@@ -25,8 +25,7 @@ class MTUnitary(Module, Base):
         super(MTUnitary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.source_pe = UnitarySequential(dim=dim // num_heads, num_heads=num_heads)
-        self.target_pe = UnitarySequential(dim=dim // num_heads, num_heads=num_heads)
+        self.pe = UnitarySequential(dim=dim // num_heads, num_heads=num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim
@@ -42,23 +41,22 @@ class MTUnitary(Module, Base):
         source_embeddings = self.embedding.embed(source_ids)
         target_embeddings = self.embedding.embed(target_ids)
 
-        self.source_pe.precompute(source_ids.size(1))
-        self.target_pe.precompute(target_ids.size(1))
+        self.pe.precompute(max(target_ids.size(1), source_ids.size(1)))
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(target_ids.size(1), device=target_ids.device)
-        source_maps = self.source_pe.forward(source_positions[None])
-        target_maps = self.target_pe.forward(target_positions[None])
+        source_maps = self.pe.forward(source_positions[None])
+        target_maps = self.pe.forward(target_positions[None])
 
         mediator = make_mediator(max(source_maps.size(1), target_maps.size(1)), device=source_ids.device)
-        enc_atn_fn = self.source_pe.adjust_attention(
+        enc_atn_fn = self.pe.adjust_attention(
             q_maps=source_maps,
             k_maps=source_maps,
             mediator=(mediator[:, :source_ids.size(1), :source_ids.size(1)], True))
-        dec_atn_fn = self.source_pe.adjust_attention(
+        dec_atn_fn = self.pe.adjust_attention(
             q_maps=target_maps,
             k_maps=target_maps,
             mediator=(mediator[:, :target_ids.size(1), :target_ids.size(1)], True))
-        cross_atn_fn = self.source_pe.adjust_attention(
+        cross_atn_fn = self.pe.adjust_attention(
             q_maps=target_maps,
             k_maps=source_maps,
             mediator=(mediator[:, :target_ids.size(1), :source_ids.size(1)], True))
@@ -85,12 +83,12 @@ class MTUnitary(Module, Base):
         source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)
-        source_maps = self.source_pe.forward(source_positions)
-        target_maps = self.target_pe.forward(target_positions)
+        source_maps = self.pe.forward(source_positions)
+        target_maps = self.pe.forward(target_positions)
 
         mediator = make_mediator(max(source_ids.size(1), max_decode_length), device=source_ids.device)
 
-        enc_atn_fn = self.source_pe.adjust_attention(
+        enc_atn_fn = self.pe.adjust_attention(
             q_maps=source_maps[None],
             k_maps=source_maps[None],
             mediator=(mediator[:, :source_ids.size(1), :source_ids.size(1)], True))
@@ -133,11 +131,11 @@ class MTUnitary(Module, Base):
             beam_width: int,
             current_step: int,
             mediator: Tensor) -> tuple[Tensor, Tensor]:
-        dec_atn_fn = self.source_pe.adjust_attention(
+        dec_atn_fn = self.pe.adjust_attention(
             q_maps=target_maps[None, :current_step],
             k_maps=target_maps[None, :current_step],
             mediator=(mediator[:, :current_step, :current_step], True))
-        cross_atn_fn = self.source_pe.adjust_attention(
+        cross_atn_fn = self.pe.adjust_attention(
             q_maps=target_maps[None, :current_step],
             k_maps=source_maps[None],
             mediator=(mediator[:, :current_step, :encoder_output.size(1)], True))

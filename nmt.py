@@ -9,9 +9,9 @@ import argparse
 import torch
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla
-from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader, PairSample
+from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
 
-from unitaryPE.nn.schedule import make_schedule
+from unitaryPE.nn.schedule import make_transformer_schedule
 
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
@@ -93,13 +93,10 @@ def run(
     optim = AdamW(model.parameters(), lr=1)
     scheduler = LambdaLR(
         optimizer=optim,
-        lr_lambda=make_schedule(
-            warmup_steps=4000,
-            warmdown_steps=max_updates - 4000,
-            total_steps=max_updates,
-            min_lr=1e-9,
-            max_lr=5e-4,
-            init_lr=1e-7))
+        lr_lambda=make_transformer_schedule(
+            dim=model.dim,
+            warmup_steps=4000)
+    )
 
     steps, updates, train_rml = 0, 0, None
     while updates < max_updates:
