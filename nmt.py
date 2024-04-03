@@ -126,7 +126,7 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
-                if updates > 0 and updates % 50 == 0:
+                if updates > 0 and updates % 500 == 0:
                     dist.all_reduce(train_rml)
                     train_rml = train_rml.item() / world_size
 
@@ -156,7 +156,7 @@ def run(
 
                         if argmin(dev_losses) <= len(dev_losses) - 10:
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
-                            exit(1)
+                            exit(0)
 
                         if argmin(dev_losses) == len(dev_losses) - 1:
                             print(f'Saving {checkpoint} at {updates}.')
