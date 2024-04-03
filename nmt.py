@@ -48,6 +48,7 @@ def run(
         batch_size: int,
         update_every: int,
         num_checkpoints: int,
+        tolerance: int,
         flip: bool = True,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
@@ -154,7 +155,7 @@ def run(
                         print(f'{updates}:{train_rml}:{dev_loss.item()}:{argmin(dev_losses)}')
                         sys.stdout.flush()
 
-                        if argmin(dev_losses) <= len(dev_losses) - 10:
+                        if argmin(dev_losses) <= len(dev_losses) - tolerance:
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(0)
 
@@ -180,6 +181,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=8000, help='Batch size (forward)')
     parser.add_argument('--update_every', type=int, required=True, help='Frequency of backward steps')
     parser.add_argument('--num_checkpoints', type=int, default=10, help='How many checkpoints to store')
+    parser.add_argument('--tolerance', type=int, default=30, help='Validation tolerance')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
 
@@ -207,6 +209,7 @@ if __name__ == '__main__':
             args.num_updates,
             args.batch_size,
             args.update_every,
-            args.num_checkpoints
+            args.num_checkpoints,
+            args.tolerance
         )
     )
