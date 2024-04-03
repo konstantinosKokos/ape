@@ -38,12 +38,13 @@ def run(
         rank: int,
         world_size: int,
         model: Model,
-        store_path: str,
-        data_path: str,
-        num_layers: tuple[int, int],
+        vocab_size: int,
         dim: int,
+        num_layers: tuple[int, int],
         num_heads: int,
-        max_updates: int,
+        data_path: str,
+        store_path: str,
+        num_updates: int,
         batch_size: int,
         update_every: int,
         num_checkpoints: int,
@@ -75,7 +76,7 @@ def run(
     match model:
         case Model.Unitary:
             model = MTUnitary(
-                vocab_size=32000,
+                vocab_size=vocab_size,
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
@@ -84,7 +85,7 @@ def run(
             )
         case Model.Sinusoidal:
             model = MTVanilla(
-                vocab_size=32000,
+                vocab_size=vocab_size,
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
@@ -105,7 +106,7 @@ def run(
     )
 
     dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
-    while updates < max_updates:
+    while updates < num_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
                 in map(collator, train_dl.get_batches(batch_size=batch_size, flip=flip)):
@@ -167,17 +168,17 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Unitary', 'Sinusoidal'], help='Type of model to use')
+    parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal'], help='Type of model to use')
     parser.add_argument('--vocab_size', type=int, default=32000, help='Size of vocabulary')
+    parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
+    parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
+    parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
+    parser.add_argument('--data_path', type=str, required=True, help='Where to load the vectorized data from')
+    parser.add_argument('--store_path', type=str, required=True, help='If/where to store the trained model')
     parser.add_argument('--num_updates', type=int, default=15000, help='Total number of parameter updates')
     parser.add_argument('--batch_size', type=int, default=8000, help='Batch size (forward)')
     parser.add_argument('--update_every', type=int, default=40, help='Frequency of backward steps')
     parser.add_argument('--num_checkpoints', type=int, default=10, help='How many checkpoints to store')
-    parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
-    parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
-    parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
-    parser.add_argument('--data_path', type=str, help='Where to load the vectorized data from')
-    parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
 
@@ -196,14 +197,15 @@ if __name__ == '__main__':
         args=(
             world_size,
             Model[args.model],
-            args.store_path,
-            args.data_path,
-            args.num_layers,
+            args.vocab_size,
             args.dim,
+            args.num_layers,
             args.num_heads,
-            args.num_checkpoints,
+            args.data_path,
+            args.store_path,
+            args.num_updates,
             args.batch_size,
             args.update_every,
-            args.save_every,
+            args.num_checkpoints
         )
     )
