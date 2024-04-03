@@ -30,8 +30,8 @@ def ddp_setup(rank: int, world_size: int) -> None:
     dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=4))
 
 
-def argmax(xs: list[float]) -> int:
-    return max(list(range(len(xs))), key=lambda i: xs[i])
+def argmin(xs: list[float]) -> int:
+    return min(list(range(len(xs))), key=lambda i: xs[i])
 
 
 def run(
@@ -151,14 +151,16 @@ def run(
                         model.train()
 
                     if rank == 0:
-                        print(f'{updates}:{train_rml}:{dev_loss.item()}')
+                        print(f'{updates}:{train_rml}:{dev_loss.item()}:{argmin(dev_losses)}')
                         sys.stdout.flush()
 
-                        if argmax(dev_losses) <= len(dev_losses) - 10:
+                        if argmin(dev_losses) <= len(dev_losses) - 10:
+                            print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(1)
 
-                        if argmax(dev_losses) == len(dev_losses):
+                        if argmin(dev_losses) == len(dev_losses) - 1:
                             print(f'Saving {checkpoint} at {updates}.')
+                            sys.stdout.flush()
                             torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
                             checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
 
