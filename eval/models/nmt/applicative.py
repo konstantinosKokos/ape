@@ -80,6 +80,7 @@ class MTUnitary(Module, Base):
             source_mask: Tensor,
             max_decode_length: int,
             beam_width: int) -> tuple[Tensor, Tensor]:
+
         source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)

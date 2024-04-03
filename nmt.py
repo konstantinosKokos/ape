@@ -54,7 +54,7 @@ def run(
         seed: int = 42
 ):
     start_time = time.time()
-    train_set, dev_set = load_datasets(data_path, subsets=('train',))
+    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
     train_set = split_ds(train_set, world_size, rank)
     dev_set = split_ds(dev_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
@@ -177,7 +177,7 @@ def parse_args():
     parser.add_argument('--store_path', type=str, required=True, help='If/where to store the trained model')
     parser.add_argument('--num_updates', type=int, default=15000, help='Total number of parameter updates')
     parser.add_argument('--batch_size', type=int, default=8000, help='Batch size (forward)')
-    parser.add_argument('--update_every', type=int, default=40, help='Frequency of backward steps')
+    parser.add_argument('--update_every', type=int, required=True, help='Frequency of backward steps')
     parser.add_argument('--num_checkpoints', type=int, default=10, help='How many checkpoints to store')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()

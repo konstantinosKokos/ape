@@ -68,8 +68,8 @@ class MTVanilla(Module, Base):
             source_mask: Tensor,
             max_decode_length: int,
             beam_width: int) -> tuple[Tensor, Tensor]:
-        source_embeddings = self.embedding.embed(source_ids)
 
+        source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)
         source_pe = self.positional_encoder.forward(source_positions)[None]
@@ -97,8 +97,7 @@ class MTVanilla(Module, Base):
                 beam_scores=beam_scores,
                 beam_width=beam_width,
                 current_step=(current_step := current_step + 1))
-            decoding = (beam_active(self.eos_token_id, beam_paths).any().item()
-                        and current_step < max_decode_length)
+            decoding = (beam_active(self.eos_token_id, beam_paths).any().item() and current_step < max_decode_length)
         return beam_paths, beam_scores
 
     def step(
@@ -123,6 +122,10 @@ class MTVanilla(Module, Base):
 
         decoder_preds = self.embedding.invert(decoder_step)
         decoder_preds = log_softmax(decoder_preds, dim=-1).view(-1, beam_width, self.vocab_size)
+
+        if current_step == 1:
+            decoder_preds[:, 1:] = -1e08
+
         paths, scores = beam_search(
             predictions=decoder_preds,
             beam_paths=beam_paths,
