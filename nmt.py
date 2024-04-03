@@ -101,7 +101,7 @@ def run(
     scheduler = LambdaLR(
         optimizer=optim,
         lr_lambda=make_transformer_schedule(
-            dim=model.dim,
+            dim=model.module.dim,
             warmup_steps=4000)
     )
 
@@ -110,7 +110,6 @@ def run(
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
                 in map(collator, train_dl.get_batches(batch_size=batch_size, flip=flip)):
-            steps += 1
             loss = model.module.go_batch(
                 source_ids=input_ids,
                 source_mask=input_mask,
