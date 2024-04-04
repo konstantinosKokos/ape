@@ -37,6 +37,7 @@ def argmin(xs: list[float]) -> int:
 def run(
         rank: int,
         world_size: int,
+        flip: bool,
         model: Model,
         vocab_size: int,
         dim: int,
@@ -49,13 +50,12 @@ def run(
         update_every: int,
         num_checkpoints: int,
         tolerance: int,
-        flip: bool = True,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
         seed: int = 42
 ):
     start_time = time.time()
-    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'))
+    train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'), flip=flip)
     train_set = split_ds(train_set, world_size, rank)
     dev_set = split_ds(dev_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
@@ -110,7 +110,7 @@ def run(
     while updates < num_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
-                in map(collator, train_dl.get_batches(batch_size=batch_size, flip=flip)):
+                in map(collator, train_dl.get_batches(batch_size=batch_size)):
             loss = model.module.go_batch(
                 source_ids=input_ids,
                 source_mask=input_mask,
@@ -135,7 +135,7 @@ def run(
                     numels, dev_loss = 0, None
                     with torch.no_grad():
                         for (input_ids, output_ids, input_mask, causal_mask) \
-                                in map(collator, dev_dl.get_batches(batch_size=batch_size, flip=flip)):
+                                in map(collator, dev_dl.get_batches(batch_size=batch_size)):
                             loss = model.module.go_batch(
                                 source_ids=input_ids,
                                 source_mask=input_mask,
@@ -171,6 +171,7 @@ def run(
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal'], help='Type of model to use')
+    parser.add_argument('--flip', type=bool, required=True, help='Translation direction.')
     parser.add_argument('--vocab_size', type=int, default=32000, help='Size of vocabulary')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
@@ -199,6 +200,7 @@ if __name__ == '__main__':
         nprocs=world_size,
         args=(
             world_size,
+            args.flip,
             Model[args.model],
             args.vocab_size,
             args.dim,

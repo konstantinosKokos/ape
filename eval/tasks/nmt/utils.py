@@ -1,9 +1,8 @@
 import pickle
 from collections import Counter, defaultdict
 from typing import Iterable
-from random import randint
-from math import sqrt, ceil
-from itertools import takewhile
+from random import sample
+from itertools import takewhile, groupby
 
 import torch
 
@@ -70,12 +69,17 @@ def vectorize_files(path: str, vocab_path: str) -> None:
 PairSample = tuple[list[int], list[int]]
 
 
-def load_datasets(path: str, subsets: tuple[str, ...] = ('train', 'dev', 'test')) -> Iterable[list[PairSample]]:
+def load_datasets(
+        path: str,
+        subsets: tuple[str, ...] = ('train', 'dev', 'test'),
+        flip: bool = False) -> Iterable[list[PairSample]]:
     for subset in subsets:
         with open(f'{path}/{subset}.en.vec', 'rb') as f:
             src = pickle.load(f)
         with open(f'{path}/{subset}.de.vec', 'rb') as f:
             tgt = pickle.load(f)
+        if flip:
+            src, tgt = tgt, src
         pairs = list(zip(src, tgt))
         yield pairs
 
@@ -88,31 +92,36 @@ def split_ds(dataset: list[PairSample], world_size: int, rank: int) -> list[Pair
 class Dataloader:
     def __init__(self, dataset: list[PairSample]):
         self.dataset = dataset
+        self.token_counts = [tuple(map(len, pair)) for pair in self.dataset]
 
-    def get_batches(self, batch_size: int, flip: bool, shuffle: bool = True) -> Iterable[list[PairSample]]:
-        indices = list(range(len(self.dataset)))
-        if shuffle:
-            indices = sorted(
-                indices,
-                key=lambda idx: (s := sum(map(len, self.dataset[idx]))) + randint(0, ceil(sqrt(s))))
+    def get_batches(self, batch_size: int) -> Iterable[list[PairSample]]:
+        indices = [
+            v
+            for _, vs in groupby(
+                iterable=sorted(range(len(self.dataset)),
+                                key=lambda idx: self.token_counts[idx]),
+                key=lambda idx: self.token_counts[idx]
+            )
+            for v in sample(vs, len(vs))
+        ]
+
         ptr = 0
-        while ptr < len(self.dataset) - 1:
-            num_tokens, batch = 0, []
-            while num_tokens < batch_size:
+        while ptr < len(indices) - 1:
+            src_tokens, tgt_tokens, batch = 0, 0, []
+
+            while src_tokens <= batch_size and tgt_tokens <= batch_size:
                 if ptr == len(indices) - 1:
                     break
-
-                src, tgt = self.dataset[indices[ptr]]
-                if flip:
-                    src, tgt = tgt, src
-                added = len(src) + len(tgt)
-                if num_tokens + added <= batch_size:
-                    num_tokens += added
-                    batch.append((src, tgt))
-                else:
+                pair = self.dataset[indices[ptr]]
+                left, right = map(len, pair)
+                if src_tokens + left > batch_size or tgt_tokens + right > batch_size:
                     yield batch
-                    batch = [(src, tgt)]
-                    num_tokens = added
+                    batch = [pair]
+                    src_tokens, tgt_tokens = left, right
+                else:
+                    batch.append(pair)
+                    src_tokens += left
+                    tgt_tokens += right
                 ptr += 1
             yield batch
 

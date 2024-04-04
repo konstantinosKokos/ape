@@ -59,7 +59,7 @@ def beam_search(
     active_mask = beam_active(eos_token_id, beam_paths)
     # Mask out inactive beams, except for the EOS token
     predictions[active_mask.logical_not()] = -1e08
-    predictions[active_mask.logical_not().unsqueeze(-1) & (torch.arange(32000).view(1, -1) == eos_token_id)] = 0.
+    predictions[active_mask.logical_not().unsqueeze(-1) & (torch.arange(predictions.size(-1)).view(1, -1) == eos_token_id)] = 0.
     # Get best k predictions for each batch/beam combination
     per_beam_values, per_beam_indices = torch.topk(predictions, k=beam_width, dim=-1)
     # Calculate accumulated scores for each beam path
