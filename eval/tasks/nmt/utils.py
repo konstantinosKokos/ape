@@ -1,6 +1,6 @@
 import pickle
 from collections import Counter, defaultdict
-from typing import Iterable
+from typing import Iterator
 from random import randint
 from itertools import takewhile, groupby
 from math import sqrt, ceil
@@ -11,7 +11,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch import Tensor
 
 
-def readlines(file: str) -> Iterable[str]:
+def readlines(file: str) -> Iterator[str]:
     with open(file, 'r') as f:
         yield from f
 
@@ -73,7 +73,7 @@ PairSample = tuple[list[int], list[int]]
 def load_datasets(
         path: str,
         subsets: tuple[str, ...] = ('train', 'dev', 'test'),
-        flip: bool = False) -> Iterable[list[PairSample]]:
+        flip: bool = False) -> Iterator[list[PairSample]]:
     for subset in subsets:
         with open(f'{path}/{subset}.en.vec', 'rb') as f:
             src = pickle.load(f)
@@ -95,7 +95,7 @@ class Dataloader:
         self.dataset = dataset
         self.token_counts = [sum(map(len, pair)) for pair in self.dataset]
 
-    def get_batches(self, batch_size: int) -> Iterable[list[PairSample]]:
+    def get_batches(self, batch_size: int) -> Iterator[list[PairSample]]:
         indices = [
             v
             for _, vs in groupby(
