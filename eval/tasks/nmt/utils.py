@@ -99,7 +99,6 @@ class Dataloader:
         while ptr < len(self.dataset) - 1:
             num_tokens, batch = 0, []
             while num_tokens < batch_size:
-                ptr = ptr + 1
                 if ptr == len(indices) - 1:
                     break
 
@@ -114,6 +113,7 @@ class Dataloader:
                     yield batch
                     batch = [(src, tgt)]
                     num_tokens = added
+                ptr += 1
             yield batch
 
 

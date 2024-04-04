@@ -152,14 +152,14 @@ def run(
                         model.train()
 
                     if rank == 0:
-                        print(f'{updates}:{train_rml}:{dev_loss.item()}:{argmin(dev_losses)}')
+                        print(f'{updates}:{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
                         if argmin(dev_losses) <= len(dev_losses) - tolerance:
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(0)
 
-                        if argmin(dev_losses) == len(dev_losses) - 1:
+                        if dev_loss < max(sorted(dev_losses)[:10]):
                             print(f'Saving {checkpoint} at {updates}.')
                             sys.stdout.flush()
                             torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
