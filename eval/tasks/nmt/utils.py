@@ -1,8 +1,10 @@
+import pdb
 import pickle
 from collections import Counter, defaultdict
 from typing import Iterable
-from random import sample
+from random import randint
 from itertools import takewhile, groupby
+from math import sqrt, ceil
 
 import torch
 
@@ -92,36 +94,36 @@ def split_ds(dataset: list[PairSample], world_size: int, rank: int) -> list[Pair
 class Dataloader:
     def __init__(self, dataset: list[PairSample]):
         self.dataset = dataset
-        self.token_counts = [tuple(map(len, pair)) for pair in self.dataset]
+        self.token_counts = [sum(map(len, pair)) for pair in self.dataset]
 
     def get_batches(self, batch_size: int) -> Iterable[list[PairSample]]:
         indices = [
             v
             for _, vs in groupby(
-                iterable=sorted(range(len(self.dataset)),
-                                key=lambda idx: self.token_counts[idx]),
+                iterable=sorted(
+                    range(len(self.dataset)),
+                    key=lambda idx: self.token_counts[idx] + randint(a=0, b=ceil(sqrt(self.token_counts[idx])))),
                 key=lambda idx: self.token_counts[idx]
             )
-            for v in sample(vs, len(vs))
+            for v in vs
         ]
 
         ptr = 0
         while ptr < len(indices) - 1:
-            src_tokens, tgt_tokens, batch = 0, 0, []
+            num_tokens, batch = 0, []
 
-            while src_tokens <= batch_size and tgt_tokens <= batch_size:
+            while num_tokens <= batch_size:
                 if ptr == len(indices) - 1:
                     break
                 pair = self.dataset[indices[ptr]]
-                left, right = map(len, pair)
-                if src_tokens + left > batch_size or tgt_tokens + right > batch_size:
+                added = sum(map(len, pair))
+                if num_tokens + added > batch_size:
                     yield batch
                     batch = [pair]
-                    src_tokens, tgt_tokens = left, right
+                    num_tokens = added
                 else:
                     batch.append(pair)
-                    src_tokens += left
-                    tgt_tokens += right
+                    num_tokens += added
                 ptr += 1
             yield batch
 
