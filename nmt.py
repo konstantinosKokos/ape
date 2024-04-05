@@ -8,7 +8,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative
+from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
 from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
 
 from unitaryPE.nn.schedule import make_transformer_schedule
@@ -112,6 +112,16 @@ def run(
                 sos_token_id=sos_token_id,
                 eos_token_id=eos_token_id
             )
+        case Model.Absolute:
+            model = MTAbsolute(
+                vocab_size=vocab_size,
+                num_layers=num_layers,
+                dim=dim,
+                num_heads=num_heads,
+                num_positions=31,
+                sos_token_id=sos_token_id,
+                eos_token_id=eos_token_id
+            )
         case _:
             raise ValueError
 
@@ -125,7 +135,7 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, steps, updates, train_rml, last_save = [], 0, 0, 0, None, -1
+    dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
     while updates < num_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
@@ -174,7 +184,7 @@ def run(
                         print(f'{updates}:{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
-                        if updates > last_save + tolerance:
+                        if min(dev_losses[-tolerance:]) > max(sorted(dev_losses)[:tolerance]):
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(0)
 
