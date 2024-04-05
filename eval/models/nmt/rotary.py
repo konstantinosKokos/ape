@@ -1,16 +1,17 @@
-from .base import Base, make_decoder_mask, beam_active
+from .base import Base, make_decoder_mask, beam_active, beam_search
 
 from torch.nn import Module
+from torch.nn.functional import log_softmax
 from torch import Tensor
 import torch
 
 from unitaryPE.nn.encoder import Encoder
 from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.position import UnitarySequential
+from unitaryPE.nn.position import Rotary
 from unitaryPE.nn.embedding import InvertibleEmbedding
 
 
-class MTUnitary(Module, Base):
+class MTRotary(Module, Base):
     def __init__(
             self,
             vocab_size: int,
@@ -19,10 +20,10 @@ class MTUnitary(Module, Base):
             num_layers: tuple[int, int],
             sos_token_id: int,
             eos_token_id: int):
-        super(MTUnitary, self).__init__()
+        super(MTRotary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.pe = UnitarySequential(dim=dim // num_heads, num_heads=num_heads)
+        self.positional_encoder = Rotary(num_positions=1000, embedding_dim=dim//num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim
@@ -37,26 +38,11 @@ class MTUnitary(Module, Base):
             target_mask: Tensor) -> Tensor:
         source_embeddings = self.embedding.embed(source_ids)
         target_embeddings = self.embedding.embed(target_ids)
+        spos = self.positional_encoder.forward(max_seq_len=max(source_ids.size(1), target_ids.size(1)))
 
-        self.pe.precompute(max(target_ids.size(1), source_ids.size(1)))
-        source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
-        target_positions = torch.arange(target_ids.size(1), device=target_ids.device)
-        source_maps = self.pe.forward(source_positions[None])
-        target_maps = self.pe.forward(target_positions[None])
-
-        mediator = make_mediator(max(source_maps.size(1), target_maps.size(1)), device=source_ids.device)
-        enc_atn_fn = self.pe.adjust_attention(
-            q_maps=source_maps,
-            k_maps=source_maps,
-            mediator=(mediator[:, :source_ids.size(1), :source_ids.size(1)], True))
-        dec_atn_fn = self.pe.adjust_attention(
-            q_maps=target_maps,
-            k_maps=target_maps,
-            mediator=(mediator[:, :target_ids.size(1), :target_ids.size(1)], True))
-        cross_atn_fn = self.pe.adjust_attention(
-            q_maps=target_maps,
-            k_maps=source_maps,
-            mediator=(mediator[:, :target_ids.size(1), :source_ids.size(1)], True))
+        enc_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        dec_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        cross_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
 
         encoder_output = self.encoder.forward(
             encoder_input=source_embeddings,
@@ -77,19 +63,13 @@ class MTUnitary(Module, Base):
             source_mask: Tensor,
             max_decode_length: int,
             beam_width: int) -> tuple[Tensor, Tensor]:
-
         source_embeddings = self.embedding.embed(source_ids)
-        source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
-        target_positions = torch.arange(max_decode_length, device=source_ids.device)
-        source_maps = self.pe.forward(source_positions)
-        target_maps = self.pe.forward(target_positions)
+        spos = self.positional_encoder.forward(max_seq_len=max(max_decode_length, source_ids.size(1)))
 
-        mediator = make_mediator(max(source_ids.size(1), max_decode_length), device=source_ids.device)
+        enc_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        dec_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
+        cross_atn_fn = self.positional_encoder.adjust_attention(sinusoidal_pos=spos)
 
-        enc_atn_fn = self.pe.adjust_attention(
-            q_maps=source_maps[None],
-            k_maps=source_maps[None],
-            mediator=(mediator[:, :source_ids.size(1), :source_ids.size(1)], True))
         encoder_output = self.encoder.forward(
             encoder_input=source_embeddings,
             encoder_mask=source_mask,
@@ -107,14 +87,8 @@ class MTUnitary(Module, Base):
             beam_paths, beam_scores = self.step(
                 encoder_output=encoder_output,
                 decoder_input=self.embedding.embed(beam_paths).flatten(0, 1),
-                dec_atn_fn=self.source_pe.adjust_attention(
-                    q_maps=target_maps[None, :current_step],
-                    k_maps=target_maps[None, :current_step],
-                    mediator=(mediator[:, :current_step, :current_step], True)),
-                cross_atn_fn=self.source_pe.adjust_attention(
-                    q_maps=target_maps[None, :current_step],
-                    k_maps=source_maps[None],
-                    mediator=(mediator[:, :current_step, :encoder_output.size(1)], True)),
+                dec_atn_fn=dec_atn_fn,
+                cross_atn_fn=cross_atn_fn,
                 source_mask=source_mask,
                 decoder_mask=decoder_mask,
                 beam_paths=beam_paths,
@@ -124,10 +98,3 @@ class MTUnitary(Module, Base):
             )
             decoding = (beam_active(self.eos_token_id, beam_paths).any().item() and current_step < max_decode_length)
         return beam_paths, beam_scores
-
-
-def make_mediator(size: int, device: torch.device) -> Tensor:
-    positions = torch.arange(size, device=device)[None, :]
-    distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
-    mediator = (0.98 ** distances.abs())
-    return mediator

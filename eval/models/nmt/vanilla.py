@@ -88,48 +88,18 @@ class MTVanilla(Module, Base):
         current_step: int = 0
 
         while decoding:
+            current_step += 1
             beam_paths, beam_scores = self.step(
                 encoder_output=encoder_output,
+                decoder_input=(self.embedding.embed(beam_paths) + target_pe[:, current_step]).flatten(0, 1),
+                dec_atn_fn=multihead_atn_fn,
+                cross_atn_fn=multihead_atn_fn,
                 source_mask=source_mask,
                 decoder_mask=decoder_mask,
-                target_pe=target_pe,
                 beam_paths=beam_paths,
                 beam_scores=beam_scores,
                 beam_width=beam_width,
-                current_step=(current_step := current_step + 1))
+                current_step=current_step,
+            )
             decoding = (beam_active(self.eos_token_id, beam_paths).any().item() and current_step < max_decode_length)
         return beam_paths, beam_scores
-
-    def step(
-            self,
-            encoder_output: Tensor,
-            source_mask: Tensor,
-            beam_paths: Tensor,
-            decoder_mask: Tensor,
-            target_pe: Tensor,
-            beam_scores: Tensor,
-            beam_width: int,
-            current_step: int) -> tuple[Tensor, Tensor]:
-        dec_atn_fn = multihead_atn_fn
-        cross_atn_fn = multihead_atn_fn
-        decoder_step = self.decoder.forward(
-            encoder_input=encoder_output.repeat(beam_width, 1, 1),
-            cross_mask=source_mask.repeat(beam_width, 1),
-            decoder_input=(self.embedding.embed(beam_paths) + target_pe[:, :current_step]).flatten(0, 1),
-            decoder_mask=decoder_mask[None, :current_step, :current_step],
-            self_atn_fn=dec_atn_fn,
-            cross_atn_fn=cross_atn_fn)[:, -1]
-
-        decoder_preds = self.embedding.invert(decoder_step)
-        decoder_preds = log_softmax(decoder_preds, dim=-1).view(-1, beam_width, self.vocab_size)
-
-        if current_step == 1:
-            decoder_preds[:, 1:] = -1e08
-
-        paths, scores = beam_search(
-            predictions=decoder_preds,
-            beam_paths=beam_paths,
-            beam_scores=beam_scores,
-            beam_width=beam_width,
-            eos_token_id=self.eos_token_id)
-        return paths, scores

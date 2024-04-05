@@ -1,10 +1,19 @@
 import torch
-from torch.nn.functional import cross_entropy
+from torch.nn.functional import cross_entropy, log_softmax
 from torch import Tensor
 from abc import abstractmethod, ABC
 
+from unitaryPE.nn.attention import AtnFn
+from unitaryPE.nn.decoder import Decoder
+from unitaryPE.nn.embedding import InvertibleEmbedding
+
 
 class Base(ABC):
+    decoder: Decoder
+    embedding: InvertibleEmbedding
+    vocab_size: int
+    eos_token_id: int
+
     @abstractmethod
     def forward_train(
             self,
@@ -42,6 +51,42 @@ class Base(ABC):
             input=preds[:, :-1].flatten(0, -2),
             target=target_ids[:, 1:].flatten(),
             reduction=reduction)
+
+    def step(
+            self,
+            encoder_output: Tensor,
+            decoder_input: Tensor,
+            dec_atn_fn: AtnFn,
+            cross_atn_fn: AtnFn,
+            source_mask: Tensor,
+            decoder_mask: Tensor,
+            beam_paths: Tensor,
+            beam_scores: Tensor,
+            beam_width: int,
+            current_step: int
+    ) -> tuple[Tensor, Tensor]:
+
+        decoder_step = self.decoder.forward(
+            encoder_input=encoder_output.repeat(beam_width, 1, 1),
+            cross_mask=source_mask.repeat(beam_width, 1),
+            decoder_input=decoder_input,
+            decoder_mask=decoder_mask[None, :current_step, :current_step],
+            self_atn_fn=dec_atn_fn,
+            cross_atn_fn=cross_atn_fn)[:, -1]
+
+        decoder_preds = self.embedding.invert(decoder_step)
+        decoder_preds = log_softmax(decoder_preds, dim=-1).view(-1, beam_width, self.vocab_size)
+
+        if current_step == 1:
+            decoder_preds[:, 1:] = -1e08
+
+        paths, scores = beam_search(
+            predictions=decoder_preds,
+            beam_paths=beam_paths,
+            beam_scores=beam_scores,
+            beam_width=beam_width,
+            eos_token_id=self.eos_token_id)
+        return paths, scores
 
 
 def beam_active(eos_token_id: int, beam_paths: Tensor) -> Tensor:

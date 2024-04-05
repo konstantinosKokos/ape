@@ -8,7 +8,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 import argparse
 import torch
 
-from eval.models.nmt import Model, MTUnitary, MTVanilla
+from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary
 from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
 
 from unitaryPE.nn.schedule import make_transformer_schedule
@@ -86,6 +86,15 @@ def run(
             )
         case Model.Sinusoidal:
             model = MTVanilla(
+                vocab_size=vocab_size,
+                num_layers=num_layers,
+                dim=dim,
+                num_heads=num_heads,
+                sos_token_id=sos_token_id,
+                eos_token_id=eos_token_id
+            )
+        case Model.Rotary:
+            model = MTRotary(
                 vocab_size=vocab_size,
                 num_layers=num_layers,
                 dim=dim,
