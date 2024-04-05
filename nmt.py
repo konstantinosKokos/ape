@@ -125,7 +125,7 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, steps, updates, train_rml, last_save = [], 0, 0, 0, None, None
+    dev_losses, checkpoint, steps, updates, train_rml, last_save = [], 0, 0, 0, None, -1
     while updates < num_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
