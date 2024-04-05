@@ -125,7 +125,7 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, steps, updates, train_rml, last_save = [], 0, 0, 0, None, -1
+    dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
     while updates < num_updates:
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
@@ -174,7 +174,7 @@ def run(
                         print(f'{updates}:{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
-                        if updates > last_save + tolerance:
+                        if min(dev_losses[-tolerance:]) > max(sorted(dev_losses)[:tolerance]):
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(0)
 
