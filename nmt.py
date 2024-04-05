@@ -140,7 +140,7 @@ def run(
         model.train()
         for (input_ids, output_ids, input_mask, causal_mask) \
                 in map(collator, train_dl.get_batches(batch_size=batch_size)):
-            loss = model.module.go_batch(
+            loss = model.module.get_loss(
                 source_ids=input_ids,
                 source_mask=input_mask,
                 target_ids=output_ids,
@@ -165,7 +165,7 @@ def run(
                     with torch.no_grad():
                         for (input_ids, output_ids, input_mask, causal_mask) \
                                 in map(collator, dev_dl.get_batches(batch_size=batch_size)):
-                            loss = model.module.go_batch(
+                            loss = model.module.get_loss(
                                 source_ids=input_ids,
                                 source_mask=input_mask,
                                 target_ids=output_ids,
