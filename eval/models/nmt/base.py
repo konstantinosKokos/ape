@@ -32,7 +32,7 @@ class Base(ABC):
             beam_width: int) -> tuple[Tensor, Tensor]:
         ...
 
-    def go_batch(
+    def get_loss(
             self,
             source_ids: Tensor,
             target_ids: Tensor,
