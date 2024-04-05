@@ -1,7 +1,6 @@
-from .base import Base, make_decoder_mask, beam_active, beam_search
+from .base import Base, make_decoder_mask, beam_active
 
 from torch.nn import Module
-from torch.nn.functional import log_softmax
 from torch import Tensor
 import torch
 
