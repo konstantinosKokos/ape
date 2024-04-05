@@ -98,7 +98,7 @@ def run(
 
     model = DistributedDataParallel(model.to(rank), device_ids=[rank])
 
-    optim = AdamW(model.parameters(), lr=1)
+    optim = AdamW(model.parameters(), lr=1, betas=(0.9, 0.98))
     scheduler = LambdaLR(
         optimizer=optim,
         lr_lambda=make_transformer_schedule(
@@ -155,7 +155,7 @@ def run(
                         print(f'{updates}:{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
-                        if argmin(dev_losses) <= len(dev_losses) - tolerance:
+                        if dev_loss >= max(sorted(dev_losses)[:tolerance]):
                             print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
                             exit(0)
 
