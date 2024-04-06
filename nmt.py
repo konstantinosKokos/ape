@@ -180,7 +180,7 @@ def run(
                         dist.all_reduce(dev_loss)
                         dev_loss /= world_size
                         dev_losses.append(dev_loss.item())
-                        model.train()
+                    model.train()
 
                     if rank == 0:
                         print(f'{updates}:{train_rml}:{dev_loss.item()}')
@@ -203,7 +203,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal', 'Rotary', 'Relative', 'Absolute'], help='Type of model to use')
     parser.add_argument('--flip', action="store_true", help='Flip translation direction.')
-    parser.add_argument('--vocab_size', type=int, default=32000, help='Size of vocabulary')
+    parser.add_argument('--vocab_size', type=int, default=32768, help='Size of vocabulary')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
