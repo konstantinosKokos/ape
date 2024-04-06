@@ -61,7 +61,9 @@ class MTAbsolute(Module, Base):
             source_ids: Tensor,
             source_mask: Tensor,
             max_decode_length: int,
-            beam_width: int) -> tuple[Tensor, Tensor]:
+            beam_width: int,
+            alpha: float = 0.6
+    ) -> tuple[Tensor, Tensor]:
         source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)
@@ -93,6 +95,7 @@ class MTAbsolute(Module, Base):
                 beam_scores=beam_scores,
                 beam_width=beam_width,
                 current_step=current_step,
+                alpha=alpha
             )
             decoding = (beam_active(self.eos_token_id, beam_paths).any().item() and current_step < max_decode_length)
         return beam_paths, beam_scores

@@ -29,7 +29,9 @@ class Base(ABC):
             source_ids: Tensor,
             source_mask: Tensor,
             max_decode_length: int,
-            beam_width: int) -> tuple[Tensor, Tensor]:
+            beam_width: int,
+            alpha: float
+    ) -> tuple[Tensor, Tensor]:
         ...
 
     def get_loss(
@@ -63,7 +65,8 @@ class Base(ABC):
             beam_paths: Tensor,
             beam_scores: Tensor,
             beam_width: int,
-            current_step: int
+            current_step: int,
+            alpha: float
     ) -> tuple[Tensor, Tensor]:
 
         decoder_step = self.decoder.forward(
@@ -85,7 +88,8 @@ class Base(ABC):
             beam_paths=beam_paths,
             beam_scores=beam_scores,
             beam_width=beam_width,
-            eos_token_id=self.eos_token_id)
+            eos_token_id=self.eos_token_id,
+            alpha=alpha)
         return paths, scores
 
 
@@ -99,16 +103,21 @@ def beam_search(
         beam_scores: Tensor,    # B x K
         beam_width: int,
         eos_token_id: int,
-):
+        alpha: float = 0.6
+) -> tuple[Tensor, Tensor]:
     # Currently active beams
     active_mask = beam_active(eos_token_id, beam_paths)
     # Mask out inactive beams, except for the EOS token
     predictions[active_mask.logical_not()] = -1e08
-    predictions[active_mask.logical_not().unsqueeze(-1) & (torch.arange(predictions.size(-1)).view(1, -1) == eos_token_id)] = 0.
+    predictions[active_mask.logical_not().unsqueeze(-1) &
+                (torch.arange(predictions.size(-1), device=active_mask.device).view(1, -1) == eos_token_id)] = 0.
     # Get best k predictions for each batch/beam combination
     per_beam_values, per_beam_indices = torch.topk(predictions, k=beam_width, dim=-1)
     # Calculate accumulated scores for each beam path
     accumulated_scores = per_beam_values + beam_scores.unsqueeze(-1)
+    # Apply length normalization
+    ...
+    # accumulated_scores[active_mask] /= norm_weight(alpha, predictions.size(-1))
     # Flatten beam dimension
     accumulated_scores = accumulated_scores.flatten(1, -1)
     # Get topk indices
@@ -116,7 +125,6 @@ def beam_search(
     # Revert indexing
     origins = topk_indices // beam_width
     choices = topk_indices % beam_width
-
     # # Construct new paths
     paths = torch.gather(beam_paths, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_paths.size(-1)))
     steps = torch.gather(per_beam_indices, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_width))
@@ -129,3 +137,7 @@ def beam_search(
 
 def make_decoder_mask(length: int, device: torch.device) -> Tensor:
     return torch.tril(torch.ones(length, length, dtype=torch.bool, device=device), diagonal=0)
+
+
+def norm_weight(alpha: float, y: int) -> float:
+    return ((y+5)/(y+4))**alpha

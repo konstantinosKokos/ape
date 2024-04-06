@@ -6,13 +6,14 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
     sys.path.append(os.environ['SLURM_SUBMIT_DIR'])
 
 import argparse
-import torch
+from random import randint
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
 from eval.tasks.nmt import make_collator, load_datasets, split_ds, Dataloader
 
 from unitaryPE.nn.schedule import make_transformer_schedule
 
+import torch
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 
@@ -23,9 +24,9 @@ from torch.nn.parallel import DistributedDataParallel
 from datetime import timedelta
 
 
-def ddp_setup(rank: int, world_size: int) -> None:
+def ddp_setup(rank: int, world_size: int, master_port: int) -> None:
     os.environ['MASTER_ADDR'] = 'localhost'
-    os.environ['MASTER_PORT'] = '12355'
+    os.environ['MASTER_PORT'] = str(master_port)
     torch.cuda.set_device(rank)
     dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=4))
 
@@ -37,6 +38,7 @@ def argmin(xs: list[float]) -> int:
 def run(
         rank: int,
         world_size: int,
+        master_port: int,
         flip: bool,
         model: Model,
         vocab_size: int,
@@ -64,7 +66,7 @@ def run(
     collator = make_collator(rank)
     sys.stdout.flush()
 
-    ddp_setup(rank, world_size)
+    ddp_setup(rank, world_size, master_port)
 
     smoke_test = torch.tensor(rank, device=rank)
     print(f'{smoke_test} @ {rank}')
@@ -189,7 +191,7 @@ def run(
                             exit(0)
 
                         if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
-                            print(f'Saving {checkpoint} at {(last_save := updates)}.')
+                            print(f'Saving {checkpoint} at {updates}.')
                             sys.stdout.flush()
                             torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
                             checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
@@ -229,6 +231,7 @@ if __name__ == '__main__':
         nprocs=world_size,
         args=(
             world_size,
+            randint(0, 100) + 12355,
             args.flip,
             Model[args.model],
             args.vocab_size,
