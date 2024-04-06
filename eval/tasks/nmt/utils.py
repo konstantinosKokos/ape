@@ -1,5 +1,6 @@
 import pickle
 from collections import Counter, defaultdict
+from random import sample
 from typing import Iterator, TypeVar, Iterable
 from itertools import takewhile, groupby
 
@@ -134,7 +135,6 @@ class Dataloader:
 
         for batch in batches:
             yield [self.dataset[index] for index in batch]
-
 
 
 def make_collator(device: str | int = 'cpu'):
