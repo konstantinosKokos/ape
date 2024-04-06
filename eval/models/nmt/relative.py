@@ -75,7 +75,7 @@ class MTRelative(Module, Base):
         mediator = self.positional_encoder.forward(distances)
 
         enc_atn_fn = self.positional_encoder.adjust_attention(
-            qk_pos=mediator[None, :source_ids.size(1), :source_ids.size(1), None, None])
+            qk_pos=mediator[None, :source_ids.size(1), :source_ids.size(1), :, None])
         encoder_output = self.encoder.forward(
             encoder_input=source_embeddings,
             encoder_mask=source_mask,
@@ -94,9 +94,9 @@ class MTRelative(Module, Base):
                 encoder_output=encoder_output,
                 decoder_input=self.embedding.embed(beam_paths).flatten(0, 1),
                 dec_atn_fn=self.positional_encoder.adjust_attention(
-                    qk_pos=mediator[None, :current_step, :current_step, None, None]),
+                    qk_pos=mediator[None, :current_step, :current_step, :, None]),
                 cross_atn_fn=self.positional_encoder.adjust_attention(
-                    qk_pos=mediator[None, :current_step, :source_ids.size(1), None, None]),
+                    qk_pos=mediator[None, :current_step, :source_ids.size(1), :, None]),
                 source_mask=source_mask,
                 decoder_mask=decoder_mask,
                 beam_paths=beam_paths,
