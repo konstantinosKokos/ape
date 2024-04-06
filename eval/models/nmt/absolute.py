@@ -24,7 +24,7 @@ class MTAbsolute(Module, Base):
         super(MTAbsolute, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = Absolute(dim=dim // num_heads, num_positions=num_positions)
+        self.positional_encoder = Absolute(dim=dim, num_positions=num_positions)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim
