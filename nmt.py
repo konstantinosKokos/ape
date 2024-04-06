@@ -229,6 +229,7 @@ if __name__ == '__main__':
     mp.spawn(
         run,
         nprocs=world_size,
+        master_port=randint(100) + 12355,
         args=(
             world_size,
             randint(0, 100) + 12355,
