@@ -1,14 +1,16 @@
 import pickle
 from collections import Counter, defaultdict
-from typing import Iterator
-from random import randint
+from typing import Iterator, Iterable, TypeVar
+from random import sample
 from itertools import takewhile, groupby
-from math import sqrt, ceil
 
 import torch
 
 from torch.nn.utils.rnn import pad_sequence
 from torch import Tensor
+
+
+T = TypeVar('T')
 
 
 def readlines(file: str) -> Iterator[str]:
@@ -90,6 +92,11 @@ def split_ds(dataset: list[PairSample], world_size: int, rank: int) -> list[Pair
     return dataset[rank::world_size]
 
 
+def shuffle(vs: Iterable[T]) -> list[T]:
+    vs = list(vs)
+    return sample(vs, len(vs))
+
+
 class Dataloader:
     def __init__(self, dataset: list[PairSample]):
         self.dataset = dataset
@@ -99,15 +106,13 @@ class Dataloader:
         indices = [
             v
             for _, vs in groupby(
-                iterable=sorted(
-                    range(len(self.token_counts)),
-                    key=lambda idx: self.token_counts[idx] + randint(a=0, b=ceil(sqrt(self.token_counts[idx])))),
+                iterable=sorted(range(len(self.token_counts)), key=lambda idx: self.token_counts[idx]),
                 key=lambda idx: self.token_counts[idx]
             )
-            for v in vs
+            for v in shuffle(vs)
         ]
 
-        ptr = 0
+        ptr, batches = 0, []
         while ptr < len(indices) - 1:
             num_tokens, batch = 0, []
 
@@ -117,14 +122,20 @@ class Dataloader:
                 pair = self.dataset[indices[ptr]]
                 added = sum(map(len, pair))
                 if num_tokens + added > batch_size:
-                    yield batch
+                    batches.append(batch)
                     batch = [pair]
                     num_tokens = added
                 else:
                     batch.append(pair)
                     num_tokens += added
                 ptr += 1
-            yield batch
+            batches.append(batch)
+
+        batches = shuffle(batches)
+
+        for batch in batches:
+            yield [self.dataset[index] for index in batch]
+
 
 
 def make_collator(device: str | int = 'cpu'):
