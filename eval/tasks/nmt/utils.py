@@ -1,7 +1,6 @@
 import pickle
 from collections import Counter, defaultdict
-from typing import Iterator, Iterable, TypeVar
-from random import sample
+from typing import Iterator, TypeVar, Iterable
 from itertools import takewhile, groupby
 
 import torch
