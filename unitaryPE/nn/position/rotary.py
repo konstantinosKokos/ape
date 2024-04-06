@@ -15,10 +15,10 @@ from .schemes import AtnFn, multihead_atn_fn
 class Rotary(Embedding):
     def __init__(self, num_positions: int, embedding_dim: int) -> None:
         super().__init__(num_positions, embedding_dim)
-        self.weight = self._init_weight(self.weight)
+        self.weight = Parameter(self._init_weight(self.weight.data))
 
     @staticmethod
-    def _init_weight(out: Parameter) -> Parameter:
+    def _init_weight(out: Tensor) -> Tensor:
         n_pos, dim = out.shape
         position_enc = torch.tensor(
             [[pos / (10000 ** (2 * (j // 2) / dim)) for j in range(dim)] for pos in range(n_pos)]

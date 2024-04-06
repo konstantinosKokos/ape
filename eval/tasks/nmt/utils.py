@@ -100,7 +100,7 @@ class Dataloader:
             v
             for _, vs in groupby(
                 iterable=sorted(
-                    range(len(self.dataset)),
+                    range(len(self.token_counts)),
                     key=lambda idx: self.token_counts[idx] + randint(a=0, b=ceil(sqrt(self.token_counts[idx])))),
                 key=lambda idx: self.token_counts[idx]
             )

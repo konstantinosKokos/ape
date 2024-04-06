@@ -76,7 +76,9 @@ class MTUnitary(Module, Base):
             source_ids: Tensor,
             source_mask: Tensor,
             max_decode_length: int,
-            beam_width: int) -> tuple[Tensor, Tensor]:
+            beam_width: int,
+            alpha: float = 0.6,
+    ) -> tuple[Tensor, Tensor]:
         source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)
@@ -106,11 +108,11 @@ class MTUnitary(Module, Base):
             beam_paths, beam_scores = self.step(
                 encoder_output=encoder_output,
                 decoder_input=self.embedding.embed(beam_paths).flatten(0, 1),
-                dec_atn_fn=self.source_pe.adjust_attention(
+                dec_atn_fn=self.positional_encoder.adjust_attention(
                     q_maps=target_maps[None, :current_step],
                     k_maps=target_maps[None, :current_step],
                     mediator=(mediator[:, :current_step, :current_step], True)),
-                cross_atn_fn=self.source_pe.adjust_attention(
+                cross_atn_fn=self.positional_encoder.adjust_attention(
                     q_maps=target_maps[None, :current_step],
                     k_maps=source_maps[None],
                     mediator=(mediator[:, :current_step, :encoder_output.size(1)], True)),
@@ -120,6 +122,7 @@ class MTUnitary(Module, Base):
                 beam_scores=beam_scores,
                 beam_width=beam_width,
                 current_step=current_step,
+                alpha=alpha
             )
             decoding = (beam_active(self.eos_token_id, beam_paths).any().item() and current_step < max_decode_length)
         return beam_paths, beam_scores
