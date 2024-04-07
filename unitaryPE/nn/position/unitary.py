@@ -4,6 +4,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module, Parameter
 from torch.nn.utils.rnn import pad_sequence
+from torch.distributions import Normal
 
 from math import ceil, log2
 from typing import NoReturn
@@ -135,7 +136,8 @@ class UnitarySequential(Module):
         super(UnitarySequential, self).__init__()
         self.dim = dim
         self.num_heads = num_heads
-        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim).softmax(dim=-1).cumsum(-1))
+        self._primitives = Parameter(Normal(loc=0, scale=0.01).sample(
+            torch.Size((self.num_heads, self.dim, self.dim))))
         self.maps = None
 
     @property
