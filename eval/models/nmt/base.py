@@ -68,17 +68,16 @@ class Base(ABC):
             current_step: int,
             alpha: float
     ) -> tuple[Tensor, Tensor]:
-
         decoder_step = self.decoder.forward(
-            encoder_input=encoder_output.repeat(beam_width, 1, 1),
-            cross_mask=source_mask.repeat(beam_width, 1),
+            encoder_input=encoder_output.repeat_interleave(beam_width, dim=0),
+            cross_mask=source_mask.repeat_interleave(beam_width, dim=0),
             decoder_input=decoder_input,
             decoder_mask=decoder_mask[None, :current_step, :current_step],
             self_atn_fn=dec_atn_fn,
             cross_atn_fn=cross_atn_fn)[:, -1]
 
         decoder_preds = self.embedding.invert(decoder_step)
-        decoder_preds = log_softmax(decoder_preds, dim=-1).view(-1, beam_width, self.vocab_size)
+        decoder_preds = log_softmax(decoder_preds, dim=-1).unflatten(0, (-1, beam_width))
 
         if current_step == 1:
             decoder_preds[:, 1:] = -1e08
