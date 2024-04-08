@@ -129,7 +129,8 @@ class MTUnitary(Module, Base):
 
 
 def make_mediator(size: int, device: torch.device) -> Tensor:
-    positions = torch.arange(size, device=device)[None, :]
-    distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
-    mediator = (0.98 ** distances.abs())
-    return mediator
+    return torch.ones(1, size, size, dtype=torch.float, device=device)
+    # positions = torch.arange(size, device=device)[None, :]
+    # distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
+    # mediator = (0.98 ** distances.abs())
+    # return mediator

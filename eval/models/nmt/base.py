@@ -115,8 +115,7 @@ def beam_search(
     # Calculate accumulated scores for each beam path
     accumulated_scores = per_beam_values + beam_scores.unsqueeze(-1)
     # Apply length normalization
-    ...
-    # accumulated_scores[active_mask] /= norm_weight(alpha, predictions.size(-1))
+    accumulated_scores[active_mask] /= norm_weight(alpha, predictions.size(-1))
     # Flatten beam dimension
     accumulated_scores = accumulated_scores.flatten(1, -1)
     # Get topk indices
