@@ -11,6 +11,51 @@ from typing import NoReturn
 from .schemes import grid_applicative, applicative, AtnFn
 
 
+class UnitarySequential(Module):
+    def __init__(self, dim: int, num_heads: int) -> None:
+        super(UnitarySequential, self).__init__()
+        self.dim = dim
+        self.num_heads = num_heads
+        self._primitives = Parameter(
+            torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1))
+        self.maps = None
+
+    @property
+    def hermitian(self) -> Tensor:
+        primitives = self._primitives * torch.tril(torch.ones_like(self._primitives), diagonal=-1)
+        return primitives - primitives.mT
+
+    @property
+    def primitives(self) -> Tensor:
+        hermitian = self.hermitian
+        return torch.matrix_exp(hermitian)
+
+    def forward(self, position_ids: Tensor) -> Tensor:
+        return self.maps[position_ids]
+
+    @staticmethod
+    def adjust_attention(q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
+        return applicative(q_maps, k_maps, mediator=mediator)
+
+    def _make_maps(self, size: int) -> Tensor:
+        def expand(history: Tensor) -> Tensor:
+            longest = history[-1]
+            expanded = history @ longest
+            return torch.cat((history, expanded), dim=0)
+
+        maps = self.primitives.unsqueeze(0)
+        for _ in range(ceil(log2(size))):
+            maps = expand(maps)
+        maps = maps[:size]
+        eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_heads, 1, 1)
+        return torch.cat(
+            (eye[None],
+             maps))
+
+    def precompute(self, size: int) -> None:
+        self.maps = self._make_maps(size)
+
+
 def create_paths(
         max_depth: int,
         branching_factor: int) -> list[list[int]]:
@@ -125,49 +170,6 @@ class UnitaryGrid(Module):
         eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_axes * self.num_heads, 1, 1)
         maps = torch.cat((eye[None], maps))
         return maps.view(-1, self.num_axes, self.num_heads, self.dim, self.dim)
-
-    def precompute(self, size: int) -> None:
-        self.maps = self._make_maps(size)
-
-
-class UnitarySequential(Module):
-    def __init__(self, dim: int, num_heads: int) -> None:
-        super(UnitarySequential, self).__init__()
-        self.dim = dim
-        self.num_heads = num_heads
-        self._primitives = Parameter(torch.rand(self.num_heads, self.dim, self.dim).softmax(dim=-1))
-        self.maps = None
-
-    @property
-    def hermitian(self) -> Tensor:
-        return self._primitives - self._primitives.mH
-
-    @property
-    def primitives(self) -> Tensor:
-        hermitian = self.hermitian
-        return torch.matrix_exp(hermitian)
-
-    def forward(self, position_ids: Tensor) -> Tensor:
-        return self.maps[position_ids]
-
-    @staticmethod
-    def adjust_attention(q_maps: Tensor, k_maps: Tensor, mediator: tuple[Tensor, bool] | None) -> AtnFn:
-        return applicative(q_maps, k_maps, mediator=mediator)
-
-    def _make_maps(self, size: int) -> Tensor:
-        def expand(history: Tensor) -> Tensor:
-            longest = history[-1]
-            expanded = history @ longest
-            return torch.cat((history, expanded), dim=0)
-
-        maps = self.primitives.unsqueeze(0)
-        for _ in range(ceil(log2(size))):
-            maps = expand(maps)
-        maps = maps[:size]
-        eye = torch.eye(self.dim, device=self.primitives.device)[None].repeat(self.num_heads, 1, 1)
-        return torch.cat(
-            (eye[None],
-             maps))
 
     def precompute(self, size: int) -> None:
         self.maps = self._make_maps(size)
