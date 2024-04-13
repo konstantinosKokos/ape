@@ -150,9 +150,8 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Unitary', 'Sinusoidal', 'Absolute', 'UnitarySeq'], help='Type of model to use')
-    parser.add_argument('--dataset', type=str, choices=['cifar10'], help='Which model to train on')
-    parser.add_argument('--data_dir', type=str, help='Where is the data located')
+    parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal', 'Absolute', 'UnitarySeq'], help='Type of model to use')
+    parser.add_argument('--data_dir', type=str, required=True, help='Where is the data located')
     parser.add_argument('--num_epochs', type=int, default=300, help='Number of training epochs')
     parser.add_argument('--num_layers', type=int, default=7, help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=256, help='Dimension of the model')
@@ -172,7 +171,7 @@ if __name__ == '__main__':
         num_layers=args.num_layers,
         dim=args.dim,
         seed=args.seed,
-        dataset=args.dataset,
+        dataset='cifar10',
         store_path=args.store_path,
         batch_size=args.batch_size,
         mlp_ratio=args.mlp_ratio,
