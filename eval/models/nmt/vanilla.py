@@ -74,13 +74,15 @@ class MTVanilla(Module, Base):
         source_embeddings = self.embedding.embed(source_ids)
         source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
         target_positions = torch.arange(max_decode_length, device=source_ids.device)
-        source_pe = self.positional_encoder.forward(source_positions)[None]
-        target_pe = self.positional_encoder.forward(target_positions)[None]
+        source_pe = self.positional_encoder.forward(source_positions[None])
+        target_pe = self.positional_encoder.forward(target_positions[None])
 
         encoder_output = self.encoder.forward(
-            encoder_input=source_embeddings + source_pe,
+            encoder_input=source_embeddings + source_pe[:, :source_ids.size(1)],
             encoder_mask=source_mask,
             atn_fn=multihead_atn_fn)
+        encoder_output = encoder_output.repeat_interleave(beam_width, dim=0)
+        source_mask = source_mask.repeat_interleave(beam_width, dim=0)
 
         decoding: bool = True
         beam_paths = torch.ones(source_embeddings.size(0), beam_width, 1, dtype=torch.long, device=source_ids.device)
@@ -93,7 +95,7 @@ class MTVanilla(Module, Base):
             current_step += 1
             beam_paths, beam_scores = self.step(
                 encoder_output=encoder_output,
-                decoder_input=(self.embedding.embed(beam_paths) + target_pe[:, current_step]).flatten(0, 1),
+                decoder_input=(self.embedding.embed(beam_paths) + target_pe[:, :current_step]).flatten(0, 1),
                 dec_atn_fn=multihead_atn_fn,
                 cross_atn_fn=multihead_atn_fn,
                 source_mask=source_mask,

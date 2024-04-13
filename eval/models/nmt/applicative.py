@@ -95,6 +95,8 @@ class MTUnitary(Module, Base):
             encoder_input=source_embeddings,
             encoder_mask=source_mask,
             atn_fn=enc_atn_fn)
+        encoder_output = encoder_output.repeat_interleave(beam_width, dim=0)
+        source_mask = source_mask.repeat_interleave(beam_width, dim=0)
 
         decoding: bool = True
         beam_paths = torch.ones(source_embeddings.size(0), beam_width, 1, dtype=torch.long, device=source_ids.device)
@@ -129,8 +131,7 @@ class MTUnitary(Module, Base):
 
 
 def make_mediator(size: int, device: torch.device) -> Tensor:
-    return torch.ones(1, size, size, 1, 1, dtype=torch.float, device=device)
-    # positions = torch.arange(size, device=device)[None, :]
-    # distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
-    # mediator = (0.98 ** distances.abs())
-    # return mediator
+    positions = torch.arange(size, device=device)[None, :]
+    distances = (positions[:, :, None] - positions[:, None]).unsqueeze(-1).unsqueeze(-1)
+    mediator = (0.98 ** distances.abs())
+    return mediator

@@ -69,8 +69,8 @@ class Base(ABC):
             alpha: float
     ) -> tuple[Tensor, Tensor]:
         decoder_step = self.decoder.forward(
-            encoder_input=encoder_output.repeat_interleave(beam_width, dim=0),
-            cross_mask=source_mask.repeat_interleave(beam_width, dim=0),
+            encoder_input=encoder_output,
+            cross_mask=source_mask,
             decoder_input=decoder_input,
             decoder_mask=decoder_mask[None, :current_step, :current_step],
             self_atn_fn=dec_atn_fn,

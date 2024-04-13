@@ -12,7 +12,7 @@ class SinusoidalFlat(Module):
 
     def forward(self, position_ids: Tensor):
         (batch_size, max_len) = position_ids.shape[:2]
-        if self.precomputed is None or max_len > self.precomputed.shape[1]:
+        if self.precomputed is None or max_len > self.precomputed.size(0):
             self.precomputed = self.precompute(max_len)
         return self.precomputed.unsqueeze(0).to(position_ids.device)
 

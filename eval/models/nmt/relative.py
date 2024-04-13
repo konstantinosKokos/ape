@@ -82,6 +82,8 @@ class MTRelative(Module, Base):
             encoder_input=source_embeddings,
             encoder_mask=source_mask,
             atn_fn=enc_atn_fn)
+        encoder_output = encoder_output.repeat_interleave(beam_width, dim=0)
+        source_mask = source_mask.repeat_interleave(beam_width, dim=0)
 
         decoding: bool = True
         beam_paths = torch.ones(source_embeddings.size(0), beam_width, 1, dtype=torch.long, device=source_ids.device)

@@ -70,10 +70,12 @@ class MTAbsolute(Module, Base):
         source_pe = self.positional_encoder.forward(source_positions)[None]
         target_pe = self.positional_encoder.forward(target_positions)[None]
 
-        encoder_output = self.encoder.forward(
+        encoder_output = (self.encoder.forward(
             encoder_input=source_embeddings + source_pe,
             encoder_mask=source_mask,
-            atn_fn=multihead_atn_fn)
+            atn_fn=multihead_atn_fn))
+        encoder_output = encoder_output.repeat_interleave(beam_width, dim=0)
+        source_mask = source_mask.repeat_interleave(beam_width, dim=0)
 
         decoding: bool = True
         beam_paths = torch.ones(source_embeddings.size(0), beam_width, 1, dtype=torch.long, device=source_ids.device)
