@@ -120,6 +120,16 @@ def run(
                 sos_token_id=task.sos_token_id,
                 eos_token_id=task.eos_token_id
             ).to('cuda')
+        case Model.Absolute:
+            model = MTAbsolute(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id,
+                num_positions=seq_len_mu
+            )
 
     steps_per_epoch = len(train_dl)
     optim = AdamW(model.parameters(), lr=1)
@@ -175,8 +185,8 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary'], help='Type of model to use')
-    parser.add_argument('--task', type=str, default='copy', choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'], help='Which task to train on')
+    parser.add_argument('--model', type=str, required=True, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary', 'Absolute'], help='Type of model to use')
+    parser.add_argument('--task', type=str, required=True, choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'], help='Which task to train on')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
     parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
@@ -184,7 +194,7 @@ def parse_args():
     parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')
-    parser.add_argument('--store_path', type=str, default=None, help='If/where to store the trained model')
+    parser.add_argument('--store_path', type=str, required=True, help='If/where to store the trained model')
     parser.add_argument('--regression', type=str, choices=['breadth', 'depth'], default=None, help='Regression order for tree decoding')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
