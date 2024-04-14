@@ -52,7 +52,8 @@ class Base(ABC):
             ignore_index=-1,
             input=preds[:, :-1].flatten(0, -2),
             target=target_ids[:, 1:].flatten(),
-            reduction=reduction)
+            reduction=reduction,
+            label_smoothing=0.1)
 
     def step(
             self,
