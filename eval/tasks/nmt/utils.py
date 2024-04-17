@@ -149,3 +149,7 @@ def make_collator(device: str | int = 'cpu'):
                 input_mask.to(device),
                 causal_mask[None, :].to(device))
     return collate_fn
+
+
+def merge_bpe(line: str) -> str:
+    return line.replace('@@ ', '')
