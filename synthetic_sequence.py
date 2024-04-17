@@ -53,19 +53,19 @@ def run(
             post_proc = lambda x: x
             collator = make_collator('cuda')
         case 'tree-copy':
-            task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)  # noqa
+            task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case 'tree-reorder':
-            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression)  # noqa
+            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case 'c3':
-            task = C3(x_projection='breadth', y_projection=regression)  # noqa
+            task = C3(x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case 'apply':
-            task = TreeApply(x_projection='breadth', y_projection=regression, vocab_size=vocab_size)  # noqa
+            task = TreeApply(x_projection='breadth', y_projection=regression, vocab_size=vocab_size, sos_token_id=0, eos_token_id=-1)  # noqa
             post_proc = lambda x: x.process()
             collator = make_flat_collator('cuda')
         case _:

@@ -9,8 +9,9 @@ class TreeCopy(TreeTask):
 
     def __post_init__(self):
         super(TreeCopy, self).__post_init__()
-        self.generator = TreeGenerator(leaves=set(range(1, self.vocab_size//2 + 1)),
-                                       operators=set(range(self.vocab_size//2 + 1, self.vocab_size + 1)),)
+        self.generator = TreeGenerator(
+            leaves=set(range(1, self.vocab_size//2 + 1)),
+            operators=set(range(self.vocab_size//2 + 1, self.vocab_size + 1)),)
 
     def sample(self, depth: int) -> TreeSample:
         x = self.generator.random_tree(depth)
