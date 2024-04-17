@@ -110,7 +110,7 @@ def run(
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
-                window_size=31,
+                window_size=300,
                 sos_token_id=sos_token_id,
                 eos_token_id=eos_token_id
             )
@@ -120,7 +120,7 @@ def run(
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
-                num_positions=31,
+                num_positions=300,
                 sos_token_id=sos_token_id,
                 eos_token_id=eos_token_id
             )

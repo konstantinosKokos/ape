@@ -7,7 +7,7 @@ from torch import Tensor
 from collections import OrderedDict
 from typing import overload
 
-from .utils import (
+from eval.tasks.nmt.utils import (
     read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe)
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
 # from sacremoses import MosesDetokenizer
@@ -64,7 +64,7 @@ def generate(
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
-                window_size=31,
+                window_size=300,
                 sos_token_id=sos_token_id,
                 eos_token_id=eos_token_id
             )
@@ -74,7 +74,7 @@ def generate(
                 num_layers=num_layers,
                 dim=dim,
                 num_heads=num_heads,
-                num_positions=31,
+                num_positions=300,
                 sos_token_id=sos_token_id,
                 eos_token_id=eos_token_id
             )
