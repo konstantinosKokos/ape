@@ -23,7 +23,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from typing import Literal
 
 
-def run(
+def train(
         model: Model,
         task: Literal['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'],
         vocab_size: int,
@@ -183,8 +183,126 @@ def run(
     sys.stdout.flush()
 
 
+def evaluate(
+        model: Model,
+        task: Literal['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'],
+        vocab_size: int,
+        seq_len_mu: int,
+        seq_len_var: int,
+        num_layers: tuple[int, int],
+        num_heads: int,
+        dim: int,
+        store_path: str | None,
+        regression: Literal['breadth', 'depth'] | None = None):
+    train_len_dist = Normal(seq_len_mu, seq_len_var)
+    test_len_dist = Normal(seq_len_mu, seq_len_var)
+    match task:
+        case 'copy':
+            task = SequenceCopy(vocab_size=vocab_size)
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'repeat':
+            task = SequenceRepeat(vocab_size=vocab_size, num_repeats=2)
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'reverse':
+            task = SequenceReverse(vocab_size=vocab_size)
+            post_proc = lambda x: x
+            collator = make_collator('cuda')
+        case 'tree-copy':
+            task = TreeCopy(vocab_size=vocab_size, x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'tree-reorder':
+            task = TreeReorder(vocab_size=vocab_size, x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'c3':
+            task = C3(x_projection='breadth', y_projection=regression, sos_token_id=0, eos_token_id=-1)  # noqa
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case 'apply':
+            task = TreeApply(x_projection='breadth', y_projection=regression, vocab_size=vocab_size, sos_token_id=0, eos_token_id=-1)  # noqa
+            post_proc = lambda x: x.process()
+            collator = make_flat_collator('cuda')
+        case _:
+            raise ValueError
+
+    _, _, test_set = task.make_sets(
+        distributions=(train_len_dist, train_len_dist, test_len_dist),
+        num_samples=(10000, 1000, 1000),
+        seed=42)  # keep this fixed for data consistency
+
+    test_dl = DataLoader(list(map(post_proc, test_set)), batch_size=32, collate_fn=collator, shuffle=False)  # noqa
+
+    match model:
+        case Model.Relative:
+            model = MTRelative(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                window_size=seq_len_mu,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id
+            ).to('cuda')
+        case Model.Unitary:
+            model = MTUnitary(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id
+            ).to('cuda')
+        case Model.Sinusoidal:
+            model = MTVanilla(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id
+            ).to('cuda')
+        case Model.Rotary:
+            model = MTRotary(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id
+            ).to('cuda')
+        case Model.Absolute:
+            model = MTAbsolute(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                sos_token_id=task.sos_token_id,
+                eos_token_id=task.eos_token_id,
+                num_positions=seq_len_mu
+            )
+
+    model.load_state_dict(torch.load(store_path, map_location='cuda'), strict=True)
+    model.eval()
+
+    correct, total = 0, 0
+    for (source_ids, target_ids, source_mask, causal_mask) in test_dl:
+        batch_correct, batch_total = model.get_acc(
+            source_ids=source_ids,
+            source_mask=source_mask,
+            target_ids=target_ids,
+            causal_mask=causal_mask
+        )
+        correct += batch_correct
+        total += batch_total
+    print(f'{correct / total} ({correct}/{total})')
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
+    parser.add_argument('--eval', action='store_true')
     parser.add_argument('--model', type=str, required=True, choices=['Relative', 'Unitary', 'Sinusoidal', 'Rotary', 'Absolute'], help='Type of model to use')
     parser.add_argument('--task', type=str, required=True, choices=['copy', 'reverse', 'repeat', 'tree-copy', 'tree-reorder', 'c3', 'apply'], help='Which task to train on')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
@@ -203,15 +321,29 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     print(args)
-    run(model=Model[args.model],
-        task=args.task,
-        num_heads=args.num_heads,
-        num_epochs=args.num_epochs,
-        vocab_size=args.vocab_size,
-        seq_len_mu=args.seq_len_mu,
-        seq_len_var=args.seq_len_var,
-        dim=args.dim,
-        num_layers=args.num_layers,
-        store_path=args.store_path,
-        regression=args.regression,
-        seed=args.seed)
+    if args.eval:
+        evaluate(
+            model=Model[args.model],
+            task=args.task,
+            num_heads=args.num_heads,
+            vocab_size=args.vocab_size,
+            seq_len_mu=args.seq_len_mu,
+            seq_len_var=args.seq_len_var,
+            dim=args.dim,
+            num_layers=args.num_layers,
+            store_path=args.store_path,
+            regression=args.regression)
+    else:
+        train(
+            model=Model[args.model],
+            task=args.task,
+            num_heads=args.num_heads,
+            num_epochs=args.num_epochs,
+            vocab_size=args.vocab_size,
+            seq_len_mu=args.seq_len_mu,
+            seq_len_var=args.seq_len_var,
+            dim=args.dim,
+            num_layers=args.num_layers,
+            store_path=args.store_path,
+            regression=args.regression,
+            seed=args.seed)
