@@ -13,7 +13,7 @@ from eval.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
 from eval.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from eval.tasks.tree.batching import make_flat_collator
 from eval.tasks.sequence.batching import make_collator
-from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute
+from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute, make_decoder_mask
 from unitaryPE.nn.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -288,12 +288,12 @@ def evaluate(
     model.eval()
 
     correct, total = 0, 0
-    for (source_ids, target_ids, source_mask, causal_mask) in test_dl:
+    for (source_ids, target_ids, source_mask, _) in test_dl:
         batch_correct, batch_total = model.get_acc(
             source_ids=source_ids,
             source_mask=source_mask,
             target_ids=target_ids,
-            causal_mask=causal_mask
+            causal_mask=make_decoder_mask(target_ids.size(1), source_ids.device)
         )
         correct += batch_correct
         total += batch_total

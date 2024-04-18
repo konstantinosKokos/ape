@@ -69,7 +69,7 @@ class Base(ABC):
             source_ids=source_ids,
             source_mask=source_mask,
             causal_mask=causal_mask,
-            max_decode_length=target_ids.size(1),
+            max_decode_length=target_ids.size(1) - 1,
             beam_width=beam_width,
             alpha=alpha
         )
