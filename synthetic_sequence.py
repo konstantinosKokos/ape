@@ -163,7 +163,7 @@ def train(
         model.eval()
         if (epoch > 0 and epoch % 5 == 0) or epoch > num_epochs // 2:
             with torch.no_grad():
-                epoch_loss = 0, 0, 0, 0
+                epoch_loss = 0.
                 for (source_ids, target_ids, source_mask, causal_mask) in dev_dl:
                     loss = model.get_loss(
                         source_ids=source_ids,
