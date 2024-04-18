@@ -74,8 +74,8 @@ class Base(ABC):
             alpha=alpha
         )
         preds = preds[:, 0]
-        target_mask = preds.ne(-1)
-        corr = source_ids.eq(preds).bitwise_and(target_mask).sum().item()
+        target_mask = target_ids.ne(-1)
+        corr = preds.eq(target_ids).bitwise_and(target_mask).sum().item()
         return corr, target_mask.sum().item()
 
     def step(
