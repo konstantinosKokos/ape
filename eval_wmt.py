@@ -9,7 +9,7 @@ from typing import overload
 
 from eval.tasks.nmt.utils import (
     read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe)
-from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
+from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
 # from sacremoses import MosesDetokenizer
 
 from tqdm import tqdm
@@ -113,11 +113,13 @@ def generate(
     with torch.no_grad():
         for start in tqdm(range(starts + 1)):
             (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*64:(start+1)*64])
+            max_decode_length = source_ids.size(1) + 50
             preds, _ = model.forward_dev(
                 source_ids=source_ids,
                 source_mask=source_mask,
+                causal_mask=make_decoder_mask(max_decode_length, device=source_ids.device),
                 beam_width=beam_width,
-                max_decode_length=source_ids.size(1) + 50,
+                max_decode_length=max_decode_length,
                 alpha=alpha
             )
             preds = preds[:, 0].cpu()

@@ -60,6 +60,7 @@ class MTAbsolute(Module, Base):
             self,
             source_ids: Tensor,
             source_mask: Tensor,
+            causal_mask: Tensor,
             max_decode_length: int,
             beam_width: int,
             alpha: float = 0.6
@@ -81,7 +82,6 @@ class MTAbsolute(Module, Base):
         beam_paths = torch.ones(source_embeddings.size(0), beam_width, 1, dtype=torch.long, device=source_ids.device)
         beam_paths *= self.sos_token_id
         beam_scores = torch.zeros(source_embeddings.size(0), beam_width, device=source_ids.device, dtype=torch.float)
-        decoder_mask = make_decoder_mask(max_decode_length, source_ids.device)
         current_step: int = 0
 
         while decoding:
@@ -92,7 +92,7 @@ class MTAbsolute(Module, Base):
                 dec_atn_fn=multihead_atn_fn,
                 cross_atn_fn=multihead_atn_fn,
                 source_mask=source_mask,
-                decoder_mask=decoder_mask,
+                decoder_mask=causal_mask,
                 beam_paths=beam_paths,
                 beam_scores=beam_scores,
                 beam_width=beam_width,

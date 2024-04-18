@@ -28,6 +28,7 @@ class Base(ABC):
             self,
             source_ids: Tensor,
             source_mask: Tensor,
+            causal_mask: Tensor,
             max_decode_length: int,
             beam_width: int,
             alpha: float
@@ -54,6 +55,28 @@ class Base(ABC):
             target=target_ids[:, 1:].flatten(),
             reduction=reduction,
             label_smoothing=0.1)
+
+    def get_acc(
+            self,
+            source_ids: Tensor,
+            target_ids: Tensor,
+            source_mask: Tensor,
+            causal_mask: Tensor,
+            beam_width: int = 1,
+            alpha: float = 1.
+    ) -> tuple[int, int]:
+        preds, _ = self.forward_dev(
+            source_ids=source_ids,
+            source_mask=source_mask,
+            causal_mask=causal_mask,
+            max_decode_length=target_ids.size(1),
+            beam_width=beam_width,
+            alpha=alpha
+        )
+        preds = preds[:, 0]
+        target_mask = preds.ne(-1)
+        corr = source_ids.eq(preds).bitwise_and(target_mask).sum().item()
+        return corr, target_mask.sum().item()
 
     def step(
             self,
