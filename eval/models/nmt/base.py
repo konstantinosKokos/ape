@@ -41,7 +41,8 @@ class Base(ABC):
             target_ids: Tensor,
             source_mask: Tensor,
             causal_mask: Tensor,
-            reduction: str = 'mean'
+            reduction: str = 'mean',
+            label_smoothing: float = 0.1
     ) -> Tensor:
         preds = self.forward_train(
             source_ids=source_ids,
@@ -54,7 +55,7 @@ class Base(ABC):
             input=preds[:, :-1].flatten(0, -2),
             target=target_ids[:, 1:].flatten(),
             reduction=reduction,
-            label_smoothing=0.1)
+            label_smoothing=label_smoothing)
 
     def get_acc(
             self,
