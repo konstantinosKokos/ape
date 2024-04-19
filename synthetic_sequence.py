@@ -287,17 +287,20 @@ def evaluate(
     model.load_state_dict(torch.load(store_path, map_location='cuda'), strict=True)
     model.eval()
 
-    correct, total = 0, 0
-    for (source_ids, target_ids, source_mask, _) in test_dl:
-        batch_correct, batch_total = model.get_acc(
-            source_ids=source_ids,
-            source_mask=source_mask,
-            target_ids=target_ids,
-            causal_mask=make_decoder_mask(target_ids.size(1), source_ids.device)
-        )
-        correct += batch_correct
-        total += batch_total
-    print(f'{correct / total} ({correct}/{total})')
+    loss = torch.tensor([], device='cuda', dtype=torch.float)
+    with torch.no_grad():
+        for (source_ids, target_ids, source_mask, causal_mask) in test_dl:
+            pad_mask = target_ids[:, :-1].flatten().ne(-1)
+            batch_xe = model.get_loss(
+                source_ids=source_ids,
+                source_mask=source_mask,
+                target_ids=target_ids,
+                causal_mask=causal_mask,
+                reduction='none'
+            )[pad_mask]
+            loss = torch.cat((loss, batch_xe), dim=-1)
+        ppl = torch.exp(-torch.mean(loss)).item()
+    print(f'{ppl=}')
 
 
 def parse_args():
