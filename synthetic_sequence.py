@@ -73,7 +73,7 @@ def train(
 
     train_set, dev_set, test_set = task.make_sets(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
-        num_samples=(10000, 1000, 1000),
+        num_samples=(6000, 2000, 2000),
         seed=42)  # keep this fixed for data consistency
 
     train_dl = DataLoader(list(map(post_proc, train_set)), batch_size=64, collate_fn=collator, shuffle=True)  # noqa
@@ -129,7 +129,7 @@ def train(
                 sos_token_id=task.sos_token_id,
                 eos_token_id=task.eos_token_id,
                 num_positions=seq_len_mu
-            )
+            ).to('cuda')
 
     steps_per_epoch = len(train_dl)
     optim = AdamW(model.parameters(), lr=1)
@@ -230,7 +230,7 @@ def evaluate(
 
     _, _, test_set = task.make_sets(
         distributions=(train_len_dist, train_len_dist, test_len_dist),
-        num_samples=(10000, 1000, 1000),
+        num_samples=(6000, 2000, 2000),
         seed=42)  # keep this fixed for data consistency
 
     test_dl = DataLoader(list(map(post_proc, test_set)), batch_size=32, collate_fn=collator, shuffle=False)  # noqa
@@ -282,7 +282,7 @@ def evaluate(
                 sos_token_id=task.sos_token_id,
                 eos_token_id=task.eos_token_id,
                 num_positions=seq_len_mu
-            )
+            ).to('cuda')
 
     model.load_state_dict(torch.load(store_path, map_location='cuda'), strict=True)
     model.eval()
