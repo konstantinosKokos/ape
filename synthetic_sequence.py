@@ -296,10 +296,11 @@ def evaluate(
                 source_mask=source_mask,
                 target_ids=target_ids,
                 causal_mask=causal_mask,
-                reduction='none'
+                reduction='none',
+                label_smoothing=0.
             )[pad_mask]
             loss = torch.cat((loss, batch_xe), dim=-1)
-        ppl = torch.exp(-torch.mean(loss)).item()
+        ppl = torch.exp(torch.mean(loss)).item()
     print(f'{ppl=}')
 
 
