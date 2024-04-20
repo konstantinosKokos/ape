@@ -1,7 +1,6 @@
-from .base import Base, make_decoder_mask, beam_search, beam_active
+from .base import Base, beam_active
 
 from torch.nn import Module
-from torch.nn.functional import log_softmax
 from torch import Tensor
 import torch
 
@@ -24,7 +23,7 @@ class MTVanilla(Module, Base):
         super(MTVanilla, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = SinusoidalFlat(dim=dim, freq=10000)
+        self.positional_encoder = SinusoidalFlat(dim=dim, freq=10000, max_seq_len=500)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim
@@ -40,11 +39,10 @@ class MTVanilla(Module, Base):
         encoder_input = self.embedding.embed(source_ids)
         decoder_input = self.embedding.embed(target_ids)
         max_seq_len = max(source_ids.shape[1], target_ids.shape[1])
-        self.positional_encoder.precompute(max_seq_len)
         positions = torch.arange(max_seq_len, device=decoder_input.device)[None, :]
 
-        encoder_input = encoder_input + self.positional_encoder.forward(positions[None, :source_ids.shape[1]])
-        decoder_input = decoder_input + self.positional_encoder.forward(positions[None, :target_ids.shape[1]])
+        encoder_input = encoder_input + self.positional_encoder.forward(positions[:source_ids.shape[1]])
+        decoder_input = decoder_input + self.positional_encoder.forward(positions[:target_ids.shape[1]])
         enc_atn_fn = multihead_atn_fn
         dec_atn_fn = multihead_atn_fn
         cross_atn_fn = multihead_atn_fn
@@ -73,13 +71,13 @@ class MTVanilla(Module, Base):
     ) -> tuple[Tensor, Tensor]:
 
         source_embeddings = self.embedding.embed(source_ids)
-        source_positions = torch.arange(source_ids.size(1), device=source_ids.device)
-        target_positions = torch.arange(max_decode_length, device=source_ids.device)
-        source_pe = self.positional_encoder.forward(source_positions[None])
-        target_pe = self.positional_encoder.forward(target_positions[None])
+        max_seq_len = max(source_ids.shape[1], max_decode_length)
+        positions = torch.arange(max_seq_len, device=source_ids.device)[None, :]
+        source_pe = self.positional_encoder.forward(positions[:, :source_ids.size(1)])
+        target_pe = self.positional_encoder.forward(positions[:, :max_decode_length])
 
         encoder_output = self.encoder.forward(
-            encoder_input=source_embeddings + source_pe[:, :source_ids.size(1)],
+            encoder_input=source_embeddings + source_pe,
             encoder_mask=source_mask,
             atn_fn=multihead_atn_fn)
         encoder_output = encoder_output.repeat_interleave(beam_width, dim=0)

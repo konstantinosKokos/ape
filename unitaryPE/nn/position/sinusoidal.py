@@ -1,22 +1,20 @@
 import torch
 from torch.nn import Module
 from torch import Tensor
+from torch.nn.functional import embedding
 
 
 class SinusoidalFlat(Module):
-    def __init__(self, dim: int, freq: int = 10000):
+    def __init__(self, dim: int, max_seq_len: int, freq: int = 10000):
         super(SinusoidalFlat, self).__init__()
         self.dim = dim
         self.freq = freq
-        self.precomputed = None
+        self.register_buffer('precomputed', self._precompute(max_seq_len), persistent=False)
 
     def forward(self, position_ids: Tensor):
-        (batch_size, max_len) = position_ids.shape[:2]
-        if self.precomputed is None or max_len > self.precomputed.size(0):
-            self.precomputed = self.precompute(max_len)
-        return self.precomputed.unsqueeze(0).to(position_ids.device)
+        return embedding(position_ids, self.precomputed)
 
-    def precompute(self, n: int) -> Tensor:
+    def _precompute(self, n: int) -> Tensor:
         pe = torch.empty(n, self.dim, dtype=torch.float)
         positions = torch.arange(0, n).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, self.dim, 2, dtype=torch.float) *
