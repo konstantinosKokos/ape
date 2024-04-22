@@ -27,18 +27,18 @@ def build_vocab(files: list[str]):
     )
 
 
-def write_vocab(vocab: dict[str, int], path: str, truncate: int) -> None:
+def write_vocab(vocab: dict[str, int], path: str) -> None:
     with open(path, 'w') as f:
         f.write('<SOS>\n<EOS>\n<UNK>\n')
         f.write('\n'.join(
-            v
-            for v, c in sorted(vocab.items(), key=lambda pair: pair[1], reverse=True)[:truncate - 3]))
+            f'{v}\t{c}'
+            for v, c in sorted(vocab.items(), key=lambda pair: pair[1], reverse=True)))
 
 
 def read_vocab(path: str) -> dict[str, int]:
     return defaultdict(
         lambda: 2,
-        {k.rstrip('\n'): i for i, k in enumerate(readlines(path))}
+        {k.rstrip('\n').split('\t')[0]: i for i, k in enumerate(readlines(path))}
     )
 
 
