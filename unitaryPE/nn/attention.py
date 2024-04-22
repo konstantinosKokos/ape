@@ -35,7 +35,7 @@ def multihead_atn_fn(
 
 
 class SelfMHA(Module):
-    def __init__(self, num_heads: int, dim: int, dropout_rate: float = 0.0) -> None:
+    def __init__(self, num_heads: int, dim: int, dropout_rate: float) -> None:
         super(SelfMHA, self).__init__()
         self.linear = Linear(dim, 3 * dim, False)
         self.out = Linear(dim, dim, False)
@@ -55,7 +55,7 @@ class SelfMHA(Module):
 
 
 class CrossMHA(Module):
-    def __init__(self, num_heads: int, dim: int, dropout_rate: float = 0.0) -> None:
+    def __init__(self, num_heads: int, dim: int, dropout_rate: float) -> None:
         super(CrossMHA, self).__init__()
         self.lin_q = Linear(dim, dim, False)
         self.lin_kv = Linear(dim, 2 * dim, False)

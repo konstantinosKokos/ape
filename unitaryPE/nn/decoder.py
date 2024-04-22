@@ -66,7 +66,7 @@ class DecoderLayer(Module):
         super(DecoderLayer, self).__init__()
         self.self_mha = SelfMHA(num_heads, dim, dropout_rate=weight_dropout)
         self.self_mha_ln = LayerNorm(dim)
-        self.cross_mha = CrossMHA(num_heads, dim)
+        self.cross_mha = CrossMHA(num_heads, dim, dropout_rate=weight_dropout)
         self.cross_mha_ln = LayerNorm(dim)
         self.ffn = Sequential(Linear(dim, mlp_ratio * dim), _get_activation(activation), Linear(mlp_ratio * dim, dim))
         self.ffn_ln = LayerNorm(dim)
