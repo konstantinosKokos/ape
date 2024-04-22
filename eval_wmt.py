@@ -10,6 +10,7 @@ from typing import overload
 from eval.tasks.nmt.utils import (
     read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe)
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
+from sacrebleu import BLEU
 # from sacremoses import MosesDetokenizer
 
 from tqdm import tqdm
@@ -99,7 +100,7 @@ def generate(
     ivocab = {v: k for k, v in vocab.items()}
     ivocab[-1] = '<PAD>'
 
-    # -- detk = MosesDetokenizer()
+    # detk = MosesDetokenizer()
 
     def devectorize(xs: list[int]) -> str:
         return merge_bpe(_devectorize(xs, ivocab, True))
@@ -130,6 +131,10 @@ def generate(
     with open(f'{store_path}/output.txt', 'w') as f:
         f.write('\n\n'.join(
             ['\n'.join((i, o, p)) for i, o, p in zip(input_sentences, output_sentences, pred_sentences)]))
+
+    scorer = BLEU(tokenize='intl', lowercase=True)
+    print(scorer.corpus_score(pred_sentences, [output_sentences]))
+    print(scorer.get_signature())
     exit(0)
 
 
