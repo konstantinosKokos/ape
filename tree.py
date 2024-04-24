@@ -62,8 +62,6 @@ def run(
                           batch_size=64, collate_fn=make_collator('cuda'), shuffle=True)
     dev_dl = DataLoader([sample.process() for sample in dev_set],  # noqa
                         batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
-    test_dl = DataLoader([sample.process() for sample in test_set],  # noqa
-                         batch_size=32, collate_fn=make_collator('cuda'), shuffle=False)
 
     torch.manual_seed(seed)
 

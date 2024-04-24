@@ -212,6 +212,16 @@ def flip(tree: Tree[Node]) -> Tree[Node]:
     return go(tree)
 
 
+def rotate(tree: Tree[Node]) -> Tree[Node]:
+    def go(_tree: Tree[Node]) -> Tree[Node]:
+        match _tree:
+            case Binary(root, Binary(p, l, r), right):
+                return Binary(p, l, Binary(root, r, go(right)))
+            case _:
+                return _tree
+    return go(tree)
+
+
 def subtrees(tree: Tree[Node]) -> list[Tree[Node]]:
     match tree:
         case Leaf(_):

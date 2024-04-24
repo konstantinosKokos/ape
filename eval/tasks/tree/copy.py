@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from .task import TreeTask, TreeSample, TreeGenerator
-from .abstract import flip
+from .abstract import rotate
 
 
 @dataclass
@@ -22,4 +22,4 @@ class TreeCopy(TreeTask):
 class TreeReorder(TreeCopy):
     def sample(self, depth: int) -> TreeSample:
         x = self.generator.random_tree(depth)
-        return TreeSample(x=x, y=flip(x), task=self)
+        return TreeSample(x=x, y=rotate(x), task=self)
