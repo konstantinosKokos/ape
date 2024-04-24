@@ -13,7 +13,7 @@ from eval.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
 from eval.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from eval.tasks.tree.batching import make_flat_collator
 from eval.tasks.sequence.batching import make_collator
-from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute, make_decoder_mask
+from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute
 from unitaryPE.nn.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -312,7 +312,7 @@ def parse_args():
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--seq_len_mu', type=int, default=100, help='Mean sequence length')
     parser.add_argument('--seq_len_var', type=int, default=10, help='Sequence length variance')
-    parser.add_argument('--num_epochs', type=int, default=200, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=400, help='Number of training epochs')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(2, 2), help='Number of layers for the model')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')

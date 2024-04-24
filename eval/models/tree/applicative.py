@@ -56,18 +56,22 @@ class TreeUnitary(Module, Base):
         dec_maps = unique_maps[inverse_xy[len(unique_enc_pos):]][inverse_y]
         inverse_y = inverse_y + inverse_x.max() + 1
 
+        enc_mediator = make_mediator(steps, inverse_x, inverse_y)
+        dec_mediator = make_mediator(steps, inverse_y, inverse_y)
+        x_mediator = make_mediator(steps, inverse_y, inverse_x)
+
         enc_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=enc_maps,
             k_maps=enc_maps,
-            mediator=((0.98 ** steps[inverse_x.unsqueeze(-1), inverse_x.unsqueeze(-2)])[:, :, :, None, None], True))
+            mediator=(enc_mediator, True))
         dec_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=dec_maps,
-            mediator=((0.98 ** steps[inverse_y.unsqueeze(-1), inverse_y.unsqueeze(-2)])[:, :, :, None, None], True))
+            mediator=(dec_mediator, True))
         cross_atn_fn = self.positional_encoder.adjust_attention(
             q_maps=dec_maps,
             k_maps=enc_maps,
-            mediator=((0.98 ** steps[inverse_y.unsqueeze(-1), inverse_x.unsqueeze(-2)])[:, :, :, None, None], True))
+            mediator=(x_mediator, True))
 
         encoder_input = self.encoder.forward(
             encoder_input=encoder_input,
@@ -81,3 +85,7 @@ class TreeUnitary(Module, Base):
             self_atn_fn=dec_atn_fn,
             cross_atn_fn=cross_atn_fn)
         return self.embedding.invert(decoder_output)
+
+
+def make_mediator(steps: Tensor, idx_x: Tensor, idx_y: Tensor) -> Tensor:
+    return 0.98 ** steps[idx_x.unsqueeze(-1), idx_y.unsqueeze(-2)].unflatten(-1, (-1, 1, 1))
