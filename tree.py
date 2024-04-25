@@ -213,6 +213,7 @@ def evaluate(
             loss = torch.cat((loss, xe), dim=-1)
         ppl = torch.exp(torch.mean(loss)).item()
     print(f'{ppl=}')
+    sys.stdout.flush()
 
 
 def parse_args():
