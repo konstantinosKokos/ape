@@ -237,9 +237,21 @@ if __name__ == '__main__':
     args = parse_args()
     print(args)
     if args.eval:
-        ...
+        evaluate(
+            model=Model[args.model],
+            task=args.task,
+            num_heads=args.num_heads,
+            vocab_size=args.vocab_size,
+            tree_depth_mu=args.tree_depth_mu,
+            tree_depth_var=args.tree_depth_var,
+            dim=args.dim,
+            num_layers=args.num_layers,
+            store_path=args.store_path,
+            regression=args.regression,
+            seed=args.seed)
     else:
-        run(model=Model[args.model],
+        run(
+            model=Model[args.model],
             task=args.task,
             num_heads=args.num_heads,
             num_epochs=args.num_epochs,
