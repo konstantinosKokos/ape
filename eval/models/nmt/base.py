@@ -133,14 +133,18 @@ def beam_search(
     active_mask = beam_active(eos_token_id, beam_paths)
     # Mask out inactive beams, except for the EOS token
     predictions[active_mask.logical_not()] = -1e08
-    predictions[active_mask.logical_not().unsqueeze(-1) &
-                (torch.arange(predictions.size(-1), device=active_mask.device).view(1, -1) == eos_token_id)] = 0.
+    predictions = torch.masked_fill(
+        input=predictions,
+        mask=active_mask.logical_not().unsqueeze(-1) &
+             (torch.arange(predictions.size(-1), device=active_mask.device).view(1, 1, -1) == eos_token_id),
+        value=0.
+    )
     # Get best k predictions for each batch/beam combination
     per_beam_values, per_beam_indices = torch.topk(predictions, k=beam_width, dim=-1)
     # Calculate accumulated scores for each beam path
     accumulated_scores = per_beam_values + beam_scores.unsqueeze(-1)
     # Apply length normalization
-    accumulated_scores[active_mask] /= norm_weight(alpha, predictions.size(-1))
+    accumulated_scores[active_mask] /= norm_weight(alpha, predictions.size(-1) + 1)
     # Flatten beam dimension
     accumulated_scores = accumulated_scores.flatten(1, -1)
     # Get topk indices

@@ -56,7 +56,7 @@ class TreeUnitary(Module, Base):
         dec_maps = unique_maps[inverse_xy[len(unique_enc_pos):]][inverse_y]
         inverse_y = inverse_y + inverse_x.max() + 1
 
-        enc_mediator = make_mediator(steps, inverse_x, inverse_y)
+        enc_mediator = make_mediator(steps, inverse_x, inverse_x)
         dec_mediator = make_mediator(steps, inverse_y, inverse_y)
         x_mediator = make_mediator(steps, inverse_y, inverse_x)
 
