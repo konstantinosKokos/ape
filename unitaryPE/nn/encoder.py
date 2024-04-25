@@ -54,8 +54,8 @@ class Encoder(Module):
             num_heads: int,
             num_layers: int,
             dim: int,
-            dropout_rate: float = 0.15,
-            weight_dropout: float = 0.,
+            dropout_rate: float = 0.1,
+            weight_dropout: float = 0.1,
             mlp_ratio: int = 4,
             activation: Literal['ReLU', 'GELU'] = 'ReLU',
             drop_path: bool = False) -> None:

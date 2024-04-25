@@ -96,6 +96,8 @@ def random_tree_unique(
 class TreeTask(ABC, metaclass=ABCMeta):
     x_projection: Literal['depth', 'breadth']
     y_projection: Literal['depth', 'breadth']
+    sos_token_id: int
+    eos_token_id: int
 
     def __post_init__(self):
         self.preprocess = make_processor(self.x_projection, self.y_projection)
@@ -110,10 +112,10 @@ class TreeTask(ABC, metaclass=ABCMeta):
                                                            tuple[list[int], list[int]],
                                                            list[list[bool]]]:
         (input_nodes, input_pos), (output_nodes, output_pos), causal_mask = self.preprocess(x, y)
-        input_nodes = [0] + input_nodes
-        input_pos = [0] + input_pos
-        output_nodes = [0] + output_nodes
-        output_pos = [0] + output_pos
+        input_nodes = [self.sos_token_id] + input_nodes
+        input_pos = [self.sos_token_id] + input_pos
+        output_nodes = [self.sos_token_id] + output_nodes
+        output_pos = [self.sos_token_id] + output_pos
         causal_mask = [[True] + row for row in causal_mask]
         sos_row = [True] + [False] * len(causal_mask)
         return (input_nodes, input_pos), (output_nodes, output_pos), [sos_row] + causal_mask
