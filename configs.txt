@@ -1,36 +1,165 @@
---model Relative --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.42.p
---model Relative --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.1312.p
---model Relative --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Relative.Copy.2310.p
---model Relative --seed 42 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.42.p
---model Relative --seed 1312 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.1312.p
---model Relative --seed 2310 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Relative.Reverse.2310.p
---model Relative --seed 42 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.42.p
---model Relative --seed 1312 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.1312.p
---model Relative --seed 2310 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Relative.Repeat.2310.p
---model Unitary --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.42.p
---model Unitary --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.1312.p
---model Unitary --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Copy.2310.p
---model Unitary --seed 42 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.42.p
---model Unitary --seed 1312 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.1312.p
---model Unitary --seed 2310 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Reverse.2310.p
---model Unitary --seed 42 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.42.p
---model Unitary --seed 1312 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.1312.p
---model Unitary --seed 2310 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Unitary.Repeat.2310.p
---model Sinusoidal --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.42.p
---model Sinusoidal --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.1312.p
---model Sinusoidal --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Copy.2310.p
---model Sinusoidal --seed 42 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.42.p
---model Sinusoidal --seed 1312 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.1312.p
---model Sinusoidal --seed 2310 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Reverse.2310.p
---model Sinusoidal --seed 42 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.42.p
---model Sinusoidal --seed 1312 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.1312.p
---model Sinusoidal --seed 2310 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Sinusoidal.Repeat.2310.p
---model Rotary --seed 42 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.42.p
---model Rotary --seed 1312 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.1312.p
---model Rotary --seed 2310 --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Copy.2310.p
---model Rotary --seed 42 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.42.p
---model Rotary --seed 1312 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.1312.p
---model Rotary --seed 2310 --task reverse --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Reverse.2310.p
---model Rotary --seed 42 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.42.p
---model Rotary --seed 1312 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.1312.p
---model Rotary --seed 2310 --task repeat --store_path /scratch/work/kogkalk1/models/sequence/Rotary.Repeat.2310.p
+--model Relative --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Relative.0.p
+--model Relative --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Relative.1.p
+--model Relative --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Relative.2.p
+--model Unitary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Unitary.0.p
+--model Unitary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Unitary.1.p
+--model Unitary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Unitary.2.p
+--model Sinusoidal --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Sinusoidal.0.p
+--model Sinusoidal --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Sinusoidal.1.p
+--model Sinusoidal --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Sinusoidal.2.p
+--model Rotary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Rotary.0.p
+--model Rotary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Rotary.1.p
+--model Rotary --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Rotary.2.p
+--model Absolute --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Absolute.0.p
+--model Absolute --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Absolute.1.p
+--model Absolute --task copy --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/copy.Absolute.2.p
+--model Relative --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Relative.0.p
+--model Relative --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Relative.1.p
+--model Relative --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Relative.2.p
+--model Unitary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Unitary.0.p
+--model Unitary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Unitary.1.p
+--model Unitary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Unitary.2.p
+--model Sinusoidal --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Sinusoidal.0.p
+--model Sinusoidal --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Sinusoidal.1.p
+--model Sinusoidal --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Sinusoidal.2.p
+--model Rotary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Rotary.0.p
+--model Rotary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Rotary.1.p
+--model Rotary --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Rotary.2.p
+--model Absolute --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Absolute.0.p
+--model Absolute --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Absolute.1.p
+--model Absolute --task repeat --seq_len_mu 100 --seq_len_var 10 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/repeat.Absolute.2.p
+--model Relative --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Relative.0.p
+--model Relative --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Relative.1.p
+--model Relative --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Relative.2.p
+--model Unitary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Unitary.0.p
+--model Unitary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Unitary.1.p
+--model Unitary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Unitary.2.p
+--model Sinusoidal --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Sinusoidal.0.p
+--model Sinusoidal --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Sinusoidal.1.p
+--model Sinusoidal --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Sinusoidal.2.p
+--model Rotary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Rotary.0.p
+--model Rotary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Rotary.1.p
+--model Rotary --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Rotary.2.p
+--model Absolute --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Absolute.0.p
+--model Absolute --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Absolute.1.p
+--model Absolute --task reverse --seq_len_mu 100 --seq_len_var 10 --vocab_size 20 --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/reverse.Absolute.2.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Relative.0.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Relative.0.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Relative.1.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Relative.1.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Relative.2.p
+--model Relative --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Relative.2.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Unitary.0.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Unitary.0.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Unitary.1.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Unitary.1.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Unitary.2.p
+--model Unitary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Unitary.2.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Sinusoidal.0.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Sinusoidal.0.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Sinusoidal.1.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Sinusoidal.1.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Sinusoidal.2.p
+--model Sinusoidal --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Sinusoidal.2.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Rotary.0.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Rotary.0.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Rotary.1.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Rotary.1.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Rotary.2.p
+--model Rotary --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Rotary.2.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Absolute.0.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Absolute.0.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Absolute.1.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Absolute.1.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.breadth.Absolute.2.p
+--model Absolute --task tree-copy --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-copy.depth.Absolute.2.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Relative.0.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Relative.0.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Relative.1.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Relative.1.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Relative.2.p
+--model Relative --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Relative.2.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Unitary.0.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Unitary.0.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Unitary.1.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Unitary.1.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Unitary.2.p
+--model Unitary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Unitary.2.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Sinusoidal.0.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Sinusoidal.0.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Sinusoidal.1.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Sinusoidal.1.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Sinusoidal.2.p
+--model Sinusoidal --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Sinusoidal.2.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Rotary.0.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Rotary.0.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Rotary.1.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Rotary.1.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Rotary.2.p
+--model Rotary --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Rotary.2.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Absolute.0.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Absolute.0.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Absolute.1.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Absolute.1.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.depth.Absolute.2.p
+--model Absolute --task tree-reorder --seq_len_mu 7 --seq_len_var 1 --vocab_size 20 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/tree-reorder.breadth.Absolute.2.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Relative.0.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Relative.0.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Relative.1.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Relative.1.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Relative.2.p
+--model Relative --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Relative.2.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Unitary.0.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Unitary.0.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Unitary.1.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Unitary.1.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Unitary.2.p
+--model Unitary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Unitary.2.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Sinusoidal.0.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Sinusoidal.0.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Sinusoidal.1.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Sinusoidal.1.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Sinusoidal.2.p
+--model Sinusoidal --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Sinusoidal.2.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Rotary.0.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Rotary.0.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Rotary.1.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Rotary.1.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Rotary.2.p
+--model Rotary --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Rotary.2.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Absolute.0.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Absolute.0.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Absolute.1.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Absolute.1.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.depth.Absolute.2.p
+--model Absolute --task c3 --seq_len_mu 7 --seq_len_var 1 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/c3.breadth.Absolute.2.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Relative.0.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Relative.0.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Relative.1.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Relative.1.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Relative.2.p
+--model Relative --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Relative.2.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Unitary.0.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Unitary.0.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Unitary.1.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Unitary.1.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Unitary.2.p
+--model Unitary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Unitary.2.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Sinusoidal.0.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Sinusoidal.0.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Sinusoidal.1.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Sinusoidal.1.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Sinusoidal.2.p
+--model Sinusoidal --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Sinusoidal.2.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Rotary.0.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Rotary.0.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Rotary.1.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Rotary.1.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Rotary.2.p
+--model Rotary --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Rotary.2.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Absolute.0.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 2310 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Absolute.0.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Absolute.1.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Absolute.1.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.depth.Absolute.2.p
+--model Absolute --task apply  --seq_len_mu 7 --seq_len_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/sequence/apply.breadth.Absolute.2.p
