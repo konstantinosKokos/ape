@@ -153,7 +153,8 @@ def train(
                 source_ids=source_ids,
                 source_mask=source_mask,
                 target_ids=target_ids,
-                causal_mask=causal_mask)
+                causal_mask=causal_mask,
+                label_smoothing=0.)
             epoch_loss += loss.item()
             loss.backward()
             optim.step()
@@ -169,7 +170,8 @@ def train(
                         source_ids=source_ids,
                         source_mask=source_mask,
                         target_ids=target_ids,
-                        causal_mask=causal_mask
+                        causal_mask=causal_mask,
+                        label_smoothing=0.
                     )
                     epoch_loss += loss.item()
                 print(f'Dev loss {epoch_loss}')

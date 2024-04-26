@@ -108,7 +108,8 @@ def run(
                 input_mask=input_mask,
                 output_ids=output_ids,
                 output_pos=output_pos,
-                causal_mask=causal_mask)
+                causal_mask=causal_mask,
+                label_smoothing=0.)
             epoch_loss += loss.item()
             loss.backward()
             optim.step()
@@ -126,7 +127,8 @@ def run(
                         input_mask=input_mask,
                         output_ids=output_ids,
                         output_pos=output_pos,
-                        causal_mask=causal_mask)
+                        causal_mask=causal_mask,
+                        label_smoothing=0.)
                     epoch_loss += loss.item()
                 print(f'Dev loss {epoch_loss}')
                 if epoch_loss < best_dev_loss and store_path is not None:
