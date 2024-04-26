@@ -103,38 +103,20 @@ class Dataloader:
         self.token_counts = [sum(map(len, pair)) for pair in self.dataset]
 
     def get_batches(self, batch_size: int) -> Iterator[list[PairSample]]:
-        indices = [
-            v
-            for _, vs in groupby(
-                iterable=sorted(range(len(self.token_counts)), key=lambda idx: self.token_counts[idx]),
-                key=lambda idx: self.token_counts[idx]
-            )
-            for v in shuffle(vs)
-        ]
+        indices = shuffle(list(range(len(self.dataset))))
 
-        ptr, batches = 0, []
-        while ptr < len(indices) - 1:
-            num_tokens, batch = 0, []
-
-            while num_tokens <= batch_size:
-                if ptr == len(indices) - 1:
-                    break
-                pair = self.dataset[indices[ptr]]
-                added = sum(map(len, pair))
-                if num_tokens + added > batch_size:
-                    batches.append(batch)
-                    batch = [ptr]
-                    num_tokens = added
-                else:
-                    batch.append(ptr)
-                    num_tokens += added
-                ptr += 1
-            batches.append(batch)
-
-        batches = shuffle(batches)
-
-        for batch in batches:
-            yield [self.dataset[index] for index in batch]
+        num_tokens, batch = 0, []
+        for idx in indices:
+            sample_size = self.token_counts[idx]
+            if num_tokens + sample_size <= batch_size:
+                batch.append(self.dataset[idx])
+                num_tokens += sample_size
+            else:
+                yield batch
+                batch = [self.dataset[idx]]
+                num_tokens = sample_size
+            if batch:
+                yield batch
 
 
 def make_collator(device: str | int = 'cpu'):

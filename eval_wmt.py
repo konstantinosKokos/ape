@@ -11,7 +11,7 @@ from eval.tasks.nmt.utils import (
     read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe)
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
 from sacrebleu import BLEU
-# from sacremoses import MosesDetokenizer
+from sacremoses import MosesDetokenizer
 
 from tqdm import tqdm
 
@@ -100,10 +100,10 @@ def generate(
     ivocab = {v: k for k, v in vocab.items()}
     ivocab[-1] = '<PAD>'
 
-    # detk = MosesDetokenizer()
+    detk = MosesDetokenizer()
 
     def devectorize(xs: list[int]) -> str:
-        return merge_bpe(_devectorize(xs, ivocab, True))
+        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split()).replace(' ##AT##-##AT## ', '-')
 
     test_ds, = load_datasets(data_path, ('test',), flip=flip)
     test_ds = sorted(test_ds, key=lambda pair: sum(map(len, pair)))
@@ -124,15 +124,21 @@ def generate(
                 alpha=alpha
             )
             preds = preds[:, 0].cpu()
-            input_sentences += [devectorize(s.tolist()) for s in source_ids]
-            output_sentences += [devectorize(t.tolist()) for t in target_ids]
-            pred_sentences += [devectorize(p.tolist()) for p in preds]
+            input_sentences += [s for s in source_ids.tolist()]
+            output_sentences += [t for t in target_ids.tolist()]
+            pred_sentences += [p for p in preds.tolist()]
         assert len(pred_sentences) == len(test_ds)
+
+    input_sentences, output_sentences, pred_sentences = tuple(map(
+        lambda seqs: list(map(devectorize, seqs)),
+        (input_sentences, output_sentences, pred_sentences)
+    ))
+
     with open(f'{store_path}/output.txt', 'w') as f:
         f.write('\n\n'.join(
             ['\n'.join((i, o, p)) for i, o, p in zip(input_sentences, output_sentences, pred_sentences)]))
 
-    scorer = BLEU(tokenize='intl', lowercase=True)
+    scorer = BLEU(tokenize='13a', lowercase=False)
     print(scorer.corpus_score(pred_sentences, [output_sentences]))
     print(scorer.get_signature())
     exit(0)
