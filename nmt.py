@@ -129,7 +129,7 @@ def run(
 
     model = DistributedDataParallel(model.to(rank), device_ids=[rank])
 
-    optim = AdamW(model.parameters(), lr=1, betas=(0.9, 0.98))
+    optim = AdamW(model.parameters(), lr=1, betas=(0.9, 0.98), weight_decay=0.)
     scheduler = LambdaLR(
         optimizer=optim,
         lr_lambda=make_transformer_schedule(
