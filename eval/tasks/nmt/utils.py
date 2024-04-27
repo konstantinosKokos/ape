@@ -108,13 +108,14 @@ class Dataloader:
         num_tokens, batch = 0, []
         for idx in indices:
             sample_size = self.token_counts[idx]
-            if num_tokens + sample_size <= batch_size:
-                batch.append(self.dataset[idx])
-                num_tokens += sample_size
-            else:
+            if num_tokens + sample_size > batch_size:
                 yield batch
                 batch = [self.dataset[idx]]
                 num_tokens = sample_size
+            else:
+                batch.append(self.dataset[idx])
+                num_tokens += sample_size
+
             if batch:
                 yield batch
 
