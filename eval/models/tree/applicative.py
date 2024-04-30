@@ -9,14 +9,6 @@ from unitaryPE.nn.position import UnitaryBranching
 from unitaryPE.nn.embedding import InvertibleEmbedding
 
 
-def index_steps(steps: Tensor, idx_x: Tensor, idx_y: Tensor) -> Tensor:
-    batch_size, num_rows = idx_x.shape
-    _, num_cols = idx_y.shape
-    row_index = idx_x.unsqueeze(-1).expand(batch_size, num_rows, num_cols)
-    col_index = idx_y.unsqueeze(-2).expand(batch_size, num_rows, num_cols)
-    return steps[row_index, col_index]
-
-
 class TreeUnitary(Module, Base):
     def __init__(
             self,

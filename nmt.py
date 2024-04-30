@@ -138,10 +138,10 @@ def run(
     )
 
     dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
-    while updates < num_updates:
+    while True:
         model.train()
-        for (input_ids, output_ids, input_mask, causal_mask) \
-                in map(collator, train_dl.get_batches(batch_size=batch_size)):
+        train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size))
+        for (input_ids, output_ids, input_mask, causal_mask) in train_iterator:
             loss = model.module.get_loss(
                 source_ids=input_ids,
                 source_mask=input_mask,
@@ -149,7 +149,7 @@ def run(
                 causal_mask=causal_mask,
             )
             loss.backward()
-
+            steps += 1
             train_rml = loss.detach() if train_rml is None else (0.98 * train_rml + 0.02 * loss.detach())
 
             if steps % update_every == 0:
@@ -158,43 +158,42 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
-                if updates > 0 and updates % 500 == 0:
-                    dist.all_reduce(train_rml)
-                    train_rml = train_rml.item() / world_size
+            if updates > 0 and updates % 500 == 0:
+                dist.all_reduce(train_rml)
+                train_rml = train_rml.item() / world_size
 
-                    model.eval()
-                    numels, dev_loss = 0, None
-                    with torch.no_grad():
-                        for (input_ids, output_ids, input_mask, causal_mask) \
-                                in map(collator, dev_dl.get_batches(batch_size=batch_size)):
-                            loss = model.module.get_loss(
-                                source_ids=input_ids,
-                                source_mask=input_mask,
-                                target_ids=output_ids,
-                                causal_mask=causal_mask,
-                                reduction='sum'
-                            )
-                            dev_loss = loss if dev_loss is None else dev_loss + loss
-                            numels += output_ids.ne(-1).sum()
-                        dev_loss /= numels
-                        dist.all_reduce(dev_loss)
-                        dev_loss /= world_size
-                        dev_losses.append(dev_loss.item())
-                    model.train()
+                model.eval()
+                numels, dev_loss = 0, None
+                with torch.no_grad():
+                    dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
+                    for (input_ids, output_ids, input_mask, causal_mask) in dev_iterator:
+                        loss = model.module.get_loss(
+                            source_ids=input_ids,
+                            source_mask=input_mask,
+                            target_ids=output_ids,
+                            causal_mask=causal_mask,
+                            reduction='sum'
+                        )
+                        dev_loss = loss if dev_loss is None else dev_loss + loss
+                        numels += output_ids.ne(-1).sum()
+                    dev_loss /= numels
+                    dist.all_reduce(dev_loss)
+                    dev_loss /= world_size
+                    dev_losses.append(dev_loss.item())
+                model.train()
 
-                    if rank == 0:
-                        print(f'{updates}:{train_rml}:{dev_loss.item()}')
+                if rank == 0:
+                    print(f'{updates}:{train_rml}:{dev_loss.item()}')
+                    sys.stdout.flush()
+
+                    if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
+                        print(f'Saving {checkpoint} at {updates}.')
                         sys.stdout.flush()
+                        torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
+                        checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
 
-                        if min(dev_losses[-tolerance:]) > max(sorted(dev_losses)[:tolerance]):
-                            print(f'Best dev_loss at {argmin(dev_losses)}. Currently at {len(dev_losses) - 1}.')
-                            exit(0)
-
-                        if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
-                            print(f'Saving {checkpoint} at {updates}.')
-                            sys.stdout.flush()
-                            torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
-                            checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
+        if updates == num_updates:
+            break
 
     dist.destroy_process_group()
 
