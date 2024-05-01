@@ -2,8 +2,7 @@ import pickle
 from collections import Counter, defaultdict
 from random import sample
 from typing import Iterator, TypeVar, Iterable
-from itertools import takewhile, groupby
-from functools import reduce
+from itertools import takewhile
 
 import torch
 

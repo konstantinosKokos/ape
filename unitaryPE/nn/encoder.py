@@ -40,7 +40,6 @@ class EncoderLayer(Module):
             atn_fn: AtnFn) -> Tensor:
         mha = self.mha_ln(encoder_input)
         mha = self.mha.forward(mha, encoder_mask, atn_fn)
-        mha = self.dropout(mha)
         mha = mha + encoder_input
         ffn = self.ffn_ln.forward(mha)
         ffn = self.ffn(ffn)

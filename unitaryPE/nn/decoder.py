@@ -20,9 +20,9 @@ class Decoder(Module):
             num_heads: int,
             num_layers: int,
             dim: int,
-            dropout_rate: float = 0.15,
-            weight_dropout: float = 0.,
-            mlp_ratio: int = 2,
+            dropout_rate: float = 0.1,
+            weight_dropout: float = 0.1,
+            mlp_ratio: int = 4,
             activation: Literal['ReLU', 'GELU'] = 'ReLU') -> None:
         super(Decoder, self).__init__()
         self.decoder_layers = ModuleList(
@@ -85,7 +85,6 @@ class DecoderLayer(Module):
             xs=dec_mha,
             mask=decoder_mask,
             atn_fn=self_atn_fn)
-        dec_mha = self.dropout(dec_mha)
         dec_mha = dec_mha + decoder_input
 
         cross_mha = self.cross_mha_ln(dec_mha)
@@ -94,9 +93,9 @@ class DecoderLayer(Module):
             encoder_input=encoder_input,
             cross_mask=cross_mask,
             atn_fn=cross_atn_fn)
-        cross_mha = self.dropout(cross_mha)
         cross_mha = dec_mha + cross_mha
 
         ffn = self.ffn_ln(cross_mha)
         ffn = self.ffn(ffn)
+        ffn = self.dropout(ffn)
         return ffn + cross_mha
