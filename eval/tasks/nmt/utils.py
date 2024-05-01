@@ -3,6 +3,7 @@ from collections import Counter, defaultdict
 from random import sample
 from typing import Iterator, TypeVar, Iterable
 from itertools import takewhile, groupby
+from functools import reduce
 
 import torch
 
@@ -98,19 +99,16 @@ def shuffle(vs: Iterable[T]) -> list[T]:
 
 
 class Dataloader:
-    def __init__(self, dataset: list[PairSample]):
+    def __init__(self, dataset: list[PairSample], num_buckets: int = 50):
         self.dataset = dataset
         self.token_counts = [sum(map(len, pair)) for pair in self.dataset]
+        sorted_indices = sorted(list(range(len(self.dataset))), key=lambda i: self.token_counts[i])
+        bucket_size = len(sorted_indices) // num_buckets
+        self.buckets = [sorted_indices[i:i + bucket_size] for i in range(0, len(sorted_indices), bucket_size)]
 
     def get_batches(self, batch_size: int) -> Iterator[list[PairSample]]:
-        indices = [
-            v
-            for _, vs in groupby(
-                iterable=sorted(range(len(self.token_counts)), key=lambda idx: self.token_counts[idx]),
-                key=lambda idx: self.token_counts[idx]
-            )
-            for v in shuffle(vs)
-        ]
+        bucket_indices = tuple(map(shuffle, self.buckets))
+        indices = sum(bucket_indices, [])
 
         batches, num_tokens, batch = [], 0, []
         for idx in indices:
