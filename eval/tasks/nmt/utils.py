@@ -120,8 +120,8 @@ class Dataloader:
                 batch.append(self.dataset[idx])
                 num_tokens += sample_size
 
-            if batch:
-                batches.append(batch)
+        if batch:
+            batches.append(batch)
 
         batches = shuffle(batches)
         yield from iter(batches)

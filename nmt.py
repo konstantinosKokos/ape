@@ -51,7 +51,6 @@ def run(
         batch_size: int,
         update_every: int,
         num_checkpoints: int,
-        tolerance: int,
         sos_token_id: int = 0,
         eos_token_id: int = 1,
         seed: int = 42
@@ -158,39 +157,40 @@ def run(
                 scheduler.step()
                 optim.zero_grad(set_to_none=True)
 
-            if updates > 0 and updates % 500 == 0:
-                dist.all_reduce(train_rml)
-                train_rml = train_rml.item() / world_size
+                if updates > 0 and updates % 500 == 0:
+                    dist.all_reduce(train_rml)
+                    train_rml = train_rml.item() / world_size
 
-                model.eval()
-                numels, dev_loss = 0, None
-                with torch.no_grad():
-                    dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
-                    for (input_ids, output_ids, input_mask, causal_mask) in dev_iterator:
-                        loss = model.module.get_loss(
-                            source_ids=input_ids,
-                            source_mask=input_mask,
-                            target_ids=output_ids,
-                            causal_mask=causal_mask,
-                            reduction='sum'
-                        )
-                        dev_loss = loss if dev_loss is None else dev_loss + loss
-                        numels += output_ids.ne(-1).sum()
-                    dev_loss /= numels
-                    dist.all_reduce(dev_loss)
-                    dev_loss /= world_size
-                    dev_losses.append(dev_loss.item())
-                model.train()
+                    model.eval()
+                    numels, dev_loss = 0, None
+                    with torch.no_grad():
+                        dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
+                        for (input_ids, output_ids, input_mask, causal_mask) in dev_iterator:
+                            loss = model.module.get_loss(
+                                source_ids=input_ids,
+                                source_mask=input_mask,
+                                target_ids=output_ids,
+                                causal_mask=causal_mask,
+                                reduction='sum'
+                            )
+                            dev_loss = loss if dev_loss is None else dev_loss + loss
+                            numels += output_ids.ne(-1).sum()
+                        dev_loss /= numels
+                        dist.all_reduce(dev_loss)
+                        dev_loss /= world_size
+                        dev_losses.append(dev_loss.item())
+                    model.train()
 
-                if rank == 0:
-                    print(f'{updates}:{train_rml}:{dev_loss.item()}')
-                    sys.stdout.flush()
-
-                    if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
-                        print(f'Saving {checkpoint} at {updates}.')
+                    if rank == 0:
+                        print(f'{steps}:{updates}:{scheduler.get_lr():.5f}')
+                        print(f'{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
-                        torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
-                        checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
+
+                        if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
+                            print(f'Saving {checkpoint} at {updates}.')
+                            sys.stdout.flush()
+                            torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
+                            checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
 
         if updates == num_updates:
             break
@@ -212,7 +212,6 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, required=True, help='Batch size (forward)')
     parser.add_argument('--update_every', type=int, required=True, help='Frequency of backward steps')
     parser.add_argument('--num_checkpoints', type=int, default=10, help='How many checkpoints to store')
-    parser.add_argument('--tolerance', type=int, default=30, help='Validation tolerance')
     parser.add_argument('--seed', type=int, default=42, help='The id of the current repetition')
     return parser.parse_args()
 
