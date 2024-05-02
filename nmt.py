@@ -242,6 +242,5 @@ if __name__ == '__main__':
             args.batch_size,
             args.update_every,
             args.num_checkpoints,
-            args.tolerance
         )
     )
