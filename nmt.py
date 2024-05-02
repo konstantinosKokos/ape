@@ -182,7 +182,7 @@ def run(
                     model.train()
 
                     if rank == 0:
-                        print(f'{steps}:{updates}:{scheduler.get_lr():.5f}')
+                        print(f'{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
                         print(f'{train_rml}:{dev_loss.item()}')
                         sys.stdout.flush()
 
