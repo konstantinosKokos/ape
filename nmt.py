@@ -183,7 +183,7 @@ def run(
 
                     if rank == 0:
                         print(f'{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
-                        print(f'{train_rml}:{dev_loss.item()}')
+                        print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
                         sys.stdout.flush()
 
                         if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
