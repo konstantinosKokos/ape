@@ -25,6 +25,7 @@ class Decoder(Module):
             mlp_ratio: int = 4,
             activation: Literal['ReLU', 'GELU'] = 'ReLU') -> None:
         super(Decoder, self).__init__()
+        self.dropout = Dropout(dropout_rate)
         self.decoder_layers = ModuleList(
             [DecoderLayer(
                 num_heads=num_heads,
@@ -43,6 +44,7 @@ class Decoder(Module):
             decoder_mask: Tensor,
             self_atn_fn: AtnFn,
             cross_atn_fn: AtnFn) -> Tensor:
+        decoder_input = self.dropout(decoder_input)
         for decoder in self.decoder_layers:
             decoder_input = decoder.forward(
                 encoder_input=encoder_input,

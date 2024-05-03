@@ -59,6 +59,7 @@ class Encoder(Module):
             activation: Literal['ReLU', 'GELU'] = 'ReLU',
             drop_path: bool = False) -> None:
         super(Encoder, self).__init__()
+        self.dropout = Dropout(dropout_rate)
         self.encoder_layers = ModuleList(
             [EncoderLayer(
                 num_heads=num_heads,
@@ -75,6 +76,7 @@ class Encoder(Module):
             encoder_input: Tensor,
             encoder_mask: Tensor,
             atn_fn: AtnFn) -> Tensor:
+        encoder_input = self.dropout(encoder_input)
         for layer in self.encoder_layers:
             encoder_input = layer.forward(
                 encoder_input=encoder_input,
