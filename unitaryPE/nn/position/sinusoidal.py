@@ -5,6 +5,8 @@ from torch.nn.functional import embedding
 
 
 class SinusoidalFlat(Module):
+    precomputed: Tensor
+
     def __init__(self, dim: int, max_seq_len: int, freq: int = 10000):
         super(SinusoidalFlat, self).__init__()
         self.dim = dim
