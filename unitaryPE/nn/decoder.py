@@ -82,22 +82,22 @@ class DecoderLayer(Module):
             decoder_mask: Tensor,
             self_atn_fn: AtnFn,
             cross_atn_fn: AtnFn) -> Tensor:
-        dec_mha = self.self_mha_ln.forward(decoder_input)
         dec_mha = self.self_mha.forward(
-            xs=dec_mha,
+            xs=decoder_mask,
             mask=decoder_mask,
-            atn_fn=self_atn_fn)
-        dec_mha = dec_mha + decoder_input
-
-        cross_mha = self.cross_mha_ln(dec_mha)
+            atn_fn=self_atn_fn
+        )
+        dec_mha = decoder_input + dec_mha
+        dec_mha = self.self_mha_ln(dec_mha)
         cross_mha = self.cross_mha.forward(
-            decoder_input=cross_mha,
             encoder_input=encoder_input,
+            decoder_input=dec_mha,
             cross_mask=cross_mask,
-            atn_fn=cross_atn_fn)
+            atn_fn=cross_atn_fn
+        )
         cross_mha = dec_mha + cross_mha
+        cross_mha = self.cross_mha_ln(cross_mha)
 
-        ffn = self.ffn_ln(cross_mha)
-        ffn = self.ffn(ffn)
-        ffn = self.dropout(ffn)
-        return ffn + cross_mha
+        ffn = self.ffn(cross_mha)
+        ffn = cross_mha + ffn
+        return self.ffn_ln(ffn)

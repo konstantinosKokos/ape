@@ -38,13 +38,12 @@ class EncoderLayer(Module):
             encoder_input: Tensor,
             encoder_mask: Tensor,
             atn_fn: AtnFn) -> Tensor:
-        mha = self.mha_ln(encoder_input)
-        mha = self.mha.forward(mha, encoder_mask, atn_fn)
+        mha = self.mha.forward(encoder_input, encoder_mask, atn_fn)
         mha = mha + encoder_input
-        ffn = self.ffn_ln.forward(mha)
-        ffn = self.ffn(ffn)
-        ffn = self.dropout(ffn)
-        return ffn + mha
+        mha = self.mha_ln(mha)
+        ffn = self.ffn(mha)
+        ffn = ffn + mha
+        return self.ffn_ln(ffn)
 
 
 class Encoder(Module):
