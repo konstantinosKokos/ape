@@ -1,6 +1,6 @@
 import torch
 from torch import Tensor
-from torch.nn import Linear, Module, Dropout
+from torch.nn import Linear, Module
 from math import sqrt
 from typing import Callable
 
@@ -31,7 +31,21 @@ def multihead_atn_fn(
             mask = mask[:, None, :]
         weights = weights.masked_fill_(~mask[:, :, :, None], value=-1e10)
 
-    return weights.softmax(dim=-2)
+    return weights
+
+
+class AtnDropout(Module):
+    def __init__(self, dropout_rate: float):
+        super().__init__()
+        self.dropout_rate = dropout_rate
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.training:
+            return torch.where(
+                condition=torch.rand_like(x) > self.dropout_rate,
+                input=x,
+                other=-1e08)
+        return x
 
 
 class SelfMHA(Module):
@@ -40,7 +54,7 @@ class SelfMHA(Module):
         self.linear = Linear(dim, 3 * dim, False)
         self.out = Linear(dim, dim, False)
         self.num_heads = num_heads
-        self.dropout = Dropout(dropout_rate)
+        self.dropout = AtnDropout(dropout_rate)
 
     def forward(self, xs: Tensor, mask: Tensor, atn_fn: AtnFn) -> Tensor:
         qs, ks, vs = self.linear(xs).chunk(3, dim=-1)
@@ -49,9 +63,9 @@ class SelfMHA(Module):
         vs = vs.view(xs.shape[0], xs.shape[1], -1, self.num_heads)
         atn_weights = atn_fn(qs, ks, mask)
         atn_weights = self.dropout(atn_weights)
+        atn_weights = atn_weights.softmax(dim=-2)
         atn_values = torch.einsum('bqkh,bkdh->bqdh', atn_weights, vs).flatten(-2)
-        atn_values = self.out(atn_values)
-        return self.dropout(atn_values)
+        return self.out(atn_values)
 
 
 class CrossMHA(Module):
@@ -61,7 +75,7 @@ class CrossMHA(Module):
         self.lin_kv = Linear(dim, 2 * dim, False)
         self.out = Linear(dim, dim, False)
         self.num_heads = num_heads
-        self.dropout = Dropout(dropout_rate)
+        self.dropout = AtnDropout(dropout_rate)
 
     def forward(
             self,
@@ -76,6 +90,6 @@ class CrossMHA(Module):
         vs = vs.view(encoder_input.shape[0], encoder_input.shape[1], -1, self.num_heads)
         atn_weights = atn_fn(qs, ks, cross_mask)
         atn_weights = self.dropout(atn_weights)
+        atn_weights = atn_weights.softmax(dim=-2)
         atn_values = torch.einsum('bqkh,bkdh->bqdh', atn_weights, vs).flatten(-2)
-        atn_values = self.out(atn_values)
         return self.out(atn_values)
