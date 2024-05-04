@@ -83,7 +83,7 @@ class DecoderLayer(Module):
             self_atn_fn: AtnFn,
             cross_atn_fn: AtnFn) -> Tensor:
         dec_mha = self.self_mha.forward(
-            xs=decoder_mask,
+            xs=decoder_input,
             mask=decoder_mask,
             atn_fn=self_atn_fn
         )
