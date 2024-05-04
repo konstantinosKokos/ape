@@ -127,7 +127,7 @@ class Dataloader:
         if batch:
             batches.append(batch)
 
-        batches = shuffle(batches)
+        # batches = shuffle(batches)
         yield from iter(batches)
 
 
