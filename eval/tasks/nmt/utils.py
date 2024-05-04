@@ -98,7 +98,7 @@ def shuffle(vs: Iterable[T]) -> list[T]:
 
 
 def filter_ds(dataset: list[PairSample], max_seq_len: int) -> list[PairSample]:
-    return [(src, tgt) for src, tgt in dataset if len(tgt) < max_seq_len]
+    return [(src, tgt) for src, tgt in dataset if len(src) < max_seq_len and len(tgt) < max_seq_len]
 
 
 class Dataloader:
