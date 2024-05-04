@@ -185,13 +185,13 @@ def run(
                     if rank == 0:
                         print(f'{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
                         print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
-                        sys.stdout.flush()
 
                         if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
                             print(f'Saving {checkpoint} at {updates}.')
-                            sys.stdout.flush()
                             torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
                             checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
+                        print('-' * 64)
+                        sys.stdout.flush()
 
         if updates == num_updates:
             break
