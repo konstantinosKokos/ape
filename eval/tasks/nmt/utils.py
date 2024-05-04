@@ -97,10 +97,14 @@ def shuffle(vs: Iterable[T]) -> list[T]:
     return sample(vs, len(vs))
 
 
+def filter_ds(dataset: list[PairSample], max_seq_len: int) -> list[PairSample]:
+    return [(src, tgt) for src, tgt in dataset if len(tgt) < max_seq_len]
+
+
 class Dataloader:
     def __init__(self, dataset: list[PairSample], num_buckets: int = 50):
         self.dataset = dataset
-        self.token_counts = [sum(map(len, pair)) for pair in self.dataset]
+        self.token_counts = [len(target) for _, target in self.dataset]
         sorted_indices = sorted(list(range(len(self.dataset))), key=lambda i: self.token_counts[i])
         bucket_size = len(sorted_indices) // num_buckets
         self.buckets = [sorted_indices[i:i + bucket_size] for i in range(0, len(sorted_indices), bucket_size)]
