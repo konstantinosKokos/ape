@@ -9,6 +9,8 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch import Tensor
 
+from math import ceil
+
 
 T = TypeVar('T')
 
@@ -102,11 +104,11 @@ def filter_ds(dataset: list[PairSample], max_seq_len: int) -> list[PairSample]:
 
 
 class Dataloader:
-    def __init__(self, dataset: list[PairSample], num_buckets: int = 50):
+    def __init__(self, dataset: list[PairSample], num_buckets: int = 20):
         self.dataset = dataset
         self.token_counts = [len(target) for _, target in self.dataset]
         sorted_indices = sorted(list(range(len(self.dataset))), key=lambda i: self.token_counts[i])
-        bucket_size = len(sorted_indices) // num_buckets
+        bucket_size = ceil(len(sorted_indices) / num_buckets)
         self.buckets = [sorted_indices[i:i + bucket_size] for i in range(0, len(sorted_indices), bucket_size)]
 
     def get_batches(self, batch_size: int) -> Iterator[list[PairSample]]:
@@ -127,7 +129,7 @@ class Dataloader:
         if batch:
             batches.append(batch)
 
-        # batches = shuffle(batches)
+        batches = shuffle(batches)
         yield from iter(batches)
 
 

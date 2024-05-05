@@ -137,8 +137,9 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, steps, updates, train_rml = [], 0, 0, 0, None
+    dev_losses, checkpoint, steps, updates, train_rml, epoch = [], 0, 0, 0, None, 0
     while True:
+        epoch += 1
         model.train()
         train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size))
         for (input_ids, output_ids, input_mask, causal_mask) in train_iterator:
@@ -183,7 +184,7 @@ def run(
                     model.train()
 
                     if rank == 0:
-                        print(f'{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
+                        print(f'{epoch}:{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
                         print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
 
                         if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
