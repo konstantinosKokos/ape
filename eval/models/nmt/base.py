@@ -43,19 +43,21 @@ class Base(ABC):
             causal_mask: Tensor,
             reduction: str = 'mean',
             label_smoothing: float = 0.1
-    ) -> Tensor:
+    ) -> tuple[Tensor, int]:
         preds = self.forward_train(
             source_ids=source_ids,
             source_mask=source_mask,
             target_ids=target_ids,
             target_mask=causal_mask)
 
-        return cross_entropy(
+        loss = cross_entropy(
             ignore_index=-1,
             input=preds[:, :-1].flatten(0, -2),
             target=target_ids[:, 1:].flatten(),
             reduction=reduction,
             label_smoothing=label_smoothing)
+        numels = target_ids.ne(-1).sum().item()
+        return loss, numels
 
     def get_acc(
             self,

@@ -137,27 +137,42 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, steps, updates, train_rml, epoch = [], 0, 0, 0, None, 0
+    dev_losses, checkpoint, total_steps, updates, batch_loss, train_rml, epoch = [], 0, 0, 0, None, None, -1
     while True:
         epoch += 1
         model.train()
         train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size))
-        for (input_ids, output_ids, input_mask, causal_mask) in train_iterator:
-            loss = model.module.get_loss(
-                source_ids=input_ids,
-                source_mask=input_mask,
-                target_ids=output_ids,
-                causal_mask=causal_mask,
-            )
-            loss.backward()
-            steps += 1
-            train_rml = loss.detach() if train_rml is None else (0.98 * train_rml + 0.02 * loss.detach())
 
-            if steps % update_every == 0:
+        for step, (input_ids, output_ids, input_mask, causal_mask) in enumerate(train_iterator):
+            total_steps += 1
+            if step % update_every != (update_every - 1):
+                with model.no_sync():
+                    loss, _ = model.module.get_loss(
+                        source_ids=input_ids,
+                        source_mask=input_mask,
+                        target_ids=output_ids,
+                        causal_mask=causal_mask,
+                    )
+                    loss = loss / update_every
+                    loss.backward()
+                    batch_loss = loss.detach()
+
+            else:
+                loss, _ = model.module.get_loss(
+                    source_ids=input_ids,
+                    source_mask=input_mask,
+                    target_ids=output_ids,
+                    causal_mask=causal_mask,
+                )
+                loss = loss / update_every
+                loss.backward()
+                batch_loss = batch_loss + loss.detach()
+                train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
+
                 updates += 1
                 optim.step()
                 scheduler.step()
-                optim.zero_grad(set_to_none=True)
+                optim.zero_grad()
 
                 if updates > 0 and updates % 500 == 0:
                     dist.all_reduce(train_rml)
@@ -167,8 +182,8 @@ def run(
                     numels, dev_loss = 0, None
                     with torch.no_grad():
                         dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
-                        for (input_ids, output_ids, input_mask, causal_mask) in dev_iterator:
-                            loss = model.module.get_loss(
+                        for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
+                            loss, batch_numels = model.module.get_loss(
                                 source_ids=input_ids,
                                 source_mask=input_mask,
                                 target_ids=output_ids,
@@ -176,7 +191,7 @@ def run(
                                 reduction='sum'
                             )
                             dev_loss = loss if dev_loss is None else dev_loss + loss
-                            numels += output_ids.ne(-1).sum()
+                            numels += batch_numels
                         dev_loss /= numels
                         dist.all_reduce(dev_loss)
                         dev_loss /= world_size
@@ -184,7 +199,7 @@ def run(
                     model.train()
 
                     if rank == 0:
-                        print(f'{epoch}:{steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
+                        print(f'{epoch}:{total_steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
                         print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
 
                         if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
