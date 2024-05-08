@@ -146,7 +146,7 @@ def make_collator(device: str | int = 'cpu'):
         return (input_ids.to(device),
                 output_ids.to(device),
                 input_mask.to(device),
-                causal_mask.to(device))
+                causal_mask[None].to(device))
     return collate_fn
 
 
