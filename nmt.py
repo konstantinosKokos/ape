@@ -9,7 +9,7 @@ import argparse
 from random import randint
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
-from eval.tasks.nmt import make_collator, load_datasets, split_ds, filter_ds, Dataloader
+from eval.tasks.nmt import make_collator, load_datasets, clean_dataset, split_dataset, Dataloader
 
 from unitaryPE.nn.schedule import make_transformer_schedule
 
@@ -57,9 +57,9 @@ def run(
 ):
     start_time = time.time()
     train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'), flip=flip)
-    train_set, dev_set = tuple(map(lambda ds: filter_ds(ds, max_seq_len=95), (train_set, dev_set)))
-    train_set = split_ds(train_set, world_size, rank)
-    dev_set = split_ds(dev_set, world_size, rank)
+    train_set, dev_set = tuple(map(clean_dataset, (train_set, dev_set)))
+    train_set = split_dataset(train_set, world_size, rank)
+    dev_set = split_dataset(dev_set, world_size, rank)
     print(f'{start_time} -- {rank} -- {len(train_set)}')
     train_dl = Dataloader(train_set)
     dev_dl = Dataloader(dev_set)

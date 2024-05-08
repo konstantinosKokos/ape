@@ -1,15 +1,13 @@
 import pickle
-from collections import Counter, defaultdict
-from random import sample
 from typing import Iterator, TypeVar, Iterable
+from collections import Counter, defaultdict
 from itertools import takewhile
+from random import sample
+from math import ceil
 
 import torch
-
-from torch.nn.utils.rnn import pad_sequence
 from torch import Tensor
-
-from math import ceil
+from torch.nn.utils.rnn import pad_sequence
 
 
 T = TypeVar('T')
@@ -18,6 +16,18 @@ T = TypeVar('T')
 def readlines(file: str) -> Iterator[str]:
     with open(file, 'r') as f:
         yield from f
+
+
+PairSample = tuple[list[int], list[int]]
+Dataset = list[PairSample]
+
+
+def clean_dataset(dataset: Dataset) -> Dataset:
+    def passing(s: PairSample) -> bool:
+        lx, ly = tuple(map(len, s))
+        return 0 < lx < 100 and 0 < ly < 100 and max(lx, ly) / min(lx, ly) < 1.5
+
+    return list(filter(passing, dataset))
 
 
 def build_vocab(files: list[str]):
@@ -34,7 +44,7 @@ def write_vocab(vocab: dict[str, int], path: str) -> None:
         f.write('<SOS>\n<EOS>\n<UNK>\n')
         f.write('\n'.join(
             f'{v}\t{c}'
-            for v, c in sorted(vocab.items(), key=lambda pair: pair[1], reverse=True)))
+            for v, c in sorted(vocab.items(), key=lambda pair: (pair[1], pair[0]), reverse=True)))
 
 
 def read_vocab(path: str) -> dict[str, int]:
@@ -66,12 +76,9 @@ def vectorize_files(path: str, vocab_path: str) -> None:
     vocab = read_vocab(vocab_path)
     for lang in {'en', 'de'}:
         for subset in {'train', 'dev', 'test'}:
-            vectorized = vectorize_file(f'{path}/{subset}.{lang}.bpe', vocab, True)
+            vectorized = vectorize_file(f'{path}/bpe.{subset}.{lang}', vocab, True)
             with open(f'{path}/{subset}.{lang}.vec', 'wb') as f:
                 pickle.dump(vectorized, f)
-
-
-PairSample = tuple[list[int], list[int]]
 
 
 def load_datasets(
@@ -89,22 +96,18 @@ def load_datasets(
         yield pairs
 
 
-def split_ds(dataset: list[PairSample], world_size: int, rank: int) -> list[PairSample]:
-    dataset = sorted(dataset, key=lambda pair: sum(map(len, pair)))
-    return dataset[rank::world_size]
-
-
 def shuffle(vs: Iterable[T]) -> list[T]:
     vs = list(vs)
     return sample(vs, len(vs))
 
 
-def filter_ds(dataset: list[PairSample], max_seq_len: int) -> list[PairSample]:
-    return [(src, tgt) for src, tgt in dataset if len(src) < max_seq_len and len(tgt) < max_seq_len]
+def split_dataset(dataset: list[PairSample], world_size: int, rank: int) -> list[PairSample]:
+    dataset = sorted(dataset, key=lambda pair: sum(map(len, pair)))
+    return dataset[rank::world_size]
 
 
 class Dataloader:
-    def __init__(self, dataset: list[PairSample], num_buckets: int = 20):
+    def __init__(self, dataset: list[PairSample], num_buckets: int = 10):
         self.dataset = dataset
         self.token_counts = [len(target) for _, target in self.dataset]
         sorted_indices = sorted(list(range(len(self.dataset))), key=lambda i: self.token_counts[i])
@@ -140,10 +143,11 @@ def make_collator(device: str | int = 'cpu'):
         output_ids = pad_sequence([torch.tensor(tgt, dtype=torch.long) for _, tgt in samples], batch_first=True, padding_value=-1)
         input_mask = input_ids.ne(-1)
         causal_mask = torch.tril(torch.ones(output_ids.shape[1], output_ids.shape[1], dtype=torch.bool), diagonal=0)
+        causal_mask = causal_mask.repeat(input_mask.size(0), *(1 for _ in range(causal_mask.ndim - 1)))
         return (input_ids.to(device),
                 output_ids.to(device),
                 input_mask.to(device),
-                causal_mask[None, :].to(device))
+                causal_mask.to(device))
     return collate_fn
 
 
