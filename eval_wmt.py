@@ -100,10 +100,10 @@ def generate(
     ivocab = {v: k for k, v in vocab.items()}
     ivocab[-1] = '<PAD>'
 
-    detk = MosesDetokenizer()
+    detk = MosesDetokenizer(lang='de')
 
     def devectorize(xs: list[int]) -> str:
-        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split()).replace(' ##AT##-##AT## ', '-')
+        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split())
 
     test_ds, = load_datasets(data_path, ('test',), flip=flip)
     test_ds = sorted(test_ds, key=lambda pair: sum(map(len, pair)))

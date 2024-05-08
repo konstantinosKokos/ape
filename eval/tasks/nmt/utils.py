@@ -143,7 +143,6 @@ def make_collator(device: str | int = 'cpu'):
         output_ids = pad_sequence([torch.tensor(tgt, dtype=torch.long) for _, tgt in samples], batch_first=True, padding_value=-1)
         input_mask = input_ids.ne(-1)
         causal_mask = torch.tril(torch.ones(output_ids.shape[1], output_ids.shape[1], dtype=torch.bool), diagonal=0)
-        causal_mask = causal_mask.repeat(input_mask.size(0), *(1 for _ in range(causal_mask.ndim - 1)))
         return (input_ids.to(device),
                 output_ids.to(device),
                 input_mask.to(device),
