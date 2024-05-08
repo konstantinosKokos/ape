@@ -151,4 +151,4 @@ def make_collator(device: str | int = 'cpu'):
 
 
 def merge_bpe(line: str) -> str:
-    return line.replace('@@ ', '')
+    return line.replace('@@ ', '').replace(' @-@ ', '-')
