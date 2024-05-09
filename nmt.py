@@ -146,13 +146,14 @@ def run(
             loss = loss.sum()/effective_batch_size
             loss.backward()
             batch_loss = loss.detach() if batch_loss is None else batch_loss + loss.detach()
-            train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
 
             if total_steps % update_every == 0:
                 updates += 1
                 optim.step()
                 scheduler.step()
                 optim.zero_grad()
+
+                train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
                 batch_loss = None
 
                 if updates > 0 and updates % 500 == 0:
