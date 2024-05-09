@@ -61,7 +61,7 @@ def run(
     print(f'{len(device_ids)} * {batch_size} * {update_every} = {effective_batch_size}')
     train_dl = Dataloader(train_set)
     dev_dl = Dataloader(dev_set)
-    collator = make_collator('cpu')
+    collator = make_collator(f'cuda:{next(iter(device_ids))}')
     sys.stdout.flush()
 
     torch.manual_seed(seed)
@@ -118,6 +118,7 @@ def run(
             raise ValueError
 
     model = DataParallel(model, device_ids=device_ids)
+    model = model.to(f'cuda:{next(iter(device_ids))}')
 
     optim = AdamW(model.parameters(), lr=1, betas=(0.9, 0.98), weight_decay=0.)
     scheduler = LambdaLR(
