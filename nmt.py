@@ -16,19 +16,7 @@ from unitaryPE.nn.schedule import make_transformer_schedule
 import torch
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
-
-# from torch import distributed as dist
-# from torch import multiprocessing as mp
 from torch.nn.parallel import DataParallel
-
-from datetime import timedelta
-
-
-# def ddp_setup(rank: int, world_size: int, master_port: int) -> None:
-#     os.environ['MASTER_ADDR'] = 'localhost'
-#     os.environ['MASTER_PORT'] = str(master_port)
-#     torch.cuda.set_device(rank)
-#     dist.init_process_group(backend='nccl', rank=rank, world_size=world_size, timeout=timedelta(minutes=4))
 
 
 def argmin(xs: list[float]) -> int:
@@ -57,7 +45,7 @@ def run(
     train_set, dev_set = tuple(map(clean_dataset, (train_set, dev_set)))
     device_ids = list(range(torch.cuda.device_count()))
     update_every = accum_steps // len(device_ids)
-    effective_batch_size = len(device_ids) * batch_size * update_every
+    effective_batch_size = len(device_ids) * batch_size * accum_steps
     print(f'{len(device_ids)} * {batch_size} * {update_every} = {effective_batch_size}')
     train_dl = Dataloader(train_set)
     dev_dl = Dataloader(dev_set)
@@ -132,7 +120,7 @@ def run(
     while True:
         epoch += 1
         model.train()
-        train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size))
+        train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size * len(device_ids)))
 
         for input_ids, output_ids, input_mask, causal_mask in train_iterator:
             total_steps += 1
@@ -145,7 +133,7 @@ def run(
             )
             loss = loss.sum()/effective_batch_size
             loss.backward()
-            batch_loss = loss.detach() if batch_loss is None else batch_loss + loss.detach()
+            batch_loss = loss.item() if batch_loss is None else batch_loss + loss.item()
 
             if total_steps % update_every == 0:
                 updates += 1
@@ -157,12 +145,11 @@ def run(
                 batch_loss = None
 
                 if updates > 0 and updates % 500 == 0:
-                    train_rml = train_rml.item()
 
                     model.eval()
-                    numels, dev_loss = 0, None
+                    numels, dev_loss = 0, 0
                     with torch.no_grad():
-                        dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
+                        dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size * len(device_ids)))
                         for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
                             loss, batch_numels = model.forward(
                                 source_ids=input_ids,
@@ -171,16 +158,16 @@ def run(
                                 causal_mask=causal_mask,
                                 reduction='sum'
                             )
-                            loss = loss.sum()
+                            loss = loss.sum().item()
                             dev_loss = loss if dev_loss is None else dev_loss + loss
                             numels += batch_numels.sum().item()
                         dev_loss /= numels
 
-                        dev_losses.append(dev_loss.item())
+                        dev_losses.append(dev_loss)
                     model.train()
 
                     print(f'{epoch}:{total_steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
-                    print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
+                    print(f'{train_rml:.3f}:{dev_loss:.3f}')
 
                     if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
                         print(f'Saving {checkpoint} at {updates}.')
