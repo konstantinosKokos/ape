@@ -29,6 +29,17 @@ class MTUnitary(Module, Base):
         self.sos_token_id = sos_token_id
         self.eos_token_id = eos_token_id
 
+    def forward(
+            self,
+            source_ids: Tensor,
+            source_mask: Tensor,
+            target_ids: Tensor,
+            causal_mask: Tensor,
+            reduction: str = 'mean',
+            label_smoothing: float = 0.1,
+    ) -> tuple[Tensor, Tensor]:
+        return super().get_loss(source_ids, target_ids, source_mask, causal_mask, reduction, label_smoothing)
+
     def forward_train(
             self,
             source_ids: Tensor,

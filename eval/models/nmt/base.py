@@ -35,6 +35,18 @@ class Base(ABC):
     ) -> tuple[Tensor, Tensor]:
         ...
 
+    @abstractmethod
+    def forward(
+            self,
+            source_ids: Tensor,
+            target_ids: Tensor,
+            source_mask: Tensor,
+            causal_mask: Tensor,
+            reduction: str = 'mean',
+            label_smoothing: float = 0.1
+    ) -> tuple[Tensor, Tensor]:
+        ...
+
     def get_loss(
             self,
             source_ids: Tensor,
@@ -43,7 +55,7 @@ class Base(ABC):
             causal_mask: Tensor,
             reduction: str = 'mean',
             label_smoothing: float = 0.1
-    ) -> tuple[Tensor, int]:
+    ) -> tuple[Tensor, Tensor]:
         preds = self.forward_train(
             source_ids=source_ids,
             source_mask=source_mask,
@@ -56,7 +68,7 @@ class Base(ABC):
             target=target_ids[:, 1:].flatten(),
             reduction=reduction,
             label_smoothing=label_smoothing)
-        numels = target_ids.ne(-1).sum().item()
+        numels = target_ids.ne(-1).sum()
         return loss, numels
 
     def get_acc(
