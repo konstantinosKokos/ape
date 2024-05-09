@@ -134,7 +134,7 @@ def run(
         model.train()
         train_iterator = map(collator, train_dl.get_batches(batch_size=batch_size))
 
-        for step, (input_ids, output_ids, input_mask, causal_mask) in enumerate(train_iterator):
+        for input_ids, output_ids, input_mask, causal_mask in train_iterator:
             total_steps += 1
             loss, numels = model.forward(
                 source_ids=input_ids,
@@ -148,7 +148,7 @@ def run(
             batch_loss = loss.detach() if batch_loss is None else batch_loss + loss.detach()
             train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
 
-            if step % update_every == (update_every - 1):
+            if total_steps % update_every == 0:
                 updates += 1
                 optim.step()
                 scheduler.step()
@@ -158,35 +158,35 @@ def run(
                 if updates > 0 and updates % 500 == 0:
                     train_rml = train_rml.item()
 
-                model.eval()
-                numels, dev_loss = 0, None
-                with torch.no_grad():
-                    dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
-                    for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
-                        loss, batch_numels = model.forward(
-                            source_ids=input_ids,
-                            source_mask=input_mask,
-                            target_ids=output_ids,
-                            causal_mask=causal_mask,
-                            reduction='sum'
-                        )
-                        loss = loss.sum()
-                        dev_loss = loss if dev_loss is None else dev_loss + loss
-                        numels += batch_numels.sum().item()
-                    dev_loss /= numels
+                    model.eval()
+                    numels, dev_loss = 0, None
+                    with torch.no_grad():
+                        dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size))
+                        for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
+                            loss, batch_numels = model.forward(
+                                source_ids=input_ids,
+                                source_mask=input_mask,
+                                target_ids=output_ids,
+                                causal_mask=causal_mask,
+                                reduction='sum'
+                            )
+                            loss = loss.sum()
+                            dev_loss = loss if dev_loss is None else dev_loss + loss
+                            numels += batch_numels.sum().item()
+                        dev_loss /= numels
 
-                    dev_losses.append(dev_loss.item())
-                model.train()
+                        dev_losses.append(dev_loss.item())
+                    model.train()
 
-                print(f'{epoch}:{total_steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
-                print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
+                    print(f'{epoch}:{total_steps}:{updates}:{scheduler.get_last_lr()[0]:.5f}')
+                    print(f'{train_rml:.3f}:{dev_loss.item():.3f}')
 
-                if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
-                    print(f'Saving {checkpoint} at {updates}.')
-                    torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
-                    checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
-                print('-' * 64)
-                sys.stdout.flush()
+                    if dev_loss < max(sorted(dev_losses)[:num_checkpoints]):
+                        print(f'Saving {checkpoint} at {updates}.')
+                        torch.save(model.module.state_dict(), f'{store_path}/{checkpoint}.chk')
+                        checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
+                    print('-' * 64)
+                    sys.stdout.flush()
 
         if updates == num_updates:
             print('Exiting')
