@@ -45,7 +45,7 @@ def run(
     train_set, dev_set = tuple(map(clean_dataset, (train_set, dev_set)))
     device_ids = list(range(torch.cuda.device_count()))
     update_every = accum_steps // len(device_ids)
-    effective_batch_size = len(device_ids) * batch_size * accum_steps
+    effective_batch_size = len(device_ids) * batch_size * update_every
     print(f'{len(device_ids)} * {batch_size} * {update_every} = {effective_batch_size}')
     train_dl = Dataloader(train_set)
     dev_dl = Dataloader(dev_set)
