@@ -136,14 +136,14 @@ def run(
 
         for step, (input_ids, output_ids, input_mask, causal_mask) in enumerate(train_iterator):
             total_steps += 1
-            loss, _ = model.forward(
+            loss, numels = model.forward(
                 source_ids=input_ids,
                 source_mask=input_mask,
                 target_ids=output_ids,
                 causal_mask=causal_mask,
                 reduction='sum'
             )
-            loss = loss / effective_batch_size
+            loss = loss.sum()/effective_batch_size
             loss.backward()
             batch_loss = loss.detach() if batch_loss is None else batch_loss + loss.detach()
             train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
@@ -153,6 +153,7 @@ def run(
                 optim.step()
                 scheduler.step()
                 optim.zero_grad()
+                batch_loss = None
 
                 if updates > 0 and updates % 500 == 0:
                     train_rml = train_rml.item()
@@ -169,8 +170,9 @@ def run(
                             causal_mask=causal_mask,
                             reduction='sum'
                         )
+                        loss = loss.sum()
                         dev_loss = loss if dev_loss is None else dev_loss + loss
-                        numels += batch_numels.item()
+                        numels += batch_numels.sum().item()
                     dev_loss /= numels
 
                     dev_losses.append(dev_loss.item())
