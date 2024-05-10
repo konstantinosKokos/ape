@@ -90,6 +90,7 @@ def load_datasets(
             src = pickle.load(f)
         with open(f'{path}/{subset}.de.vec', 'rb') as f:
             tgt = pickle.load(f)
+        assert len(src) == len(tgt)
         if flip:
             src, tgt = tgt, src
         pairs = list(zip(src, tgt))
