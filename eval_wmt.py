@@ -110,7 +110,7 @@ def generate(
     collate_fn = make_collator('cuda')
 
     starts = len(test_ds) // 64
-    input_sentences, output_sentences, pred_sentences = [], [], []
+    input_ids, output_ids, ref_ids = [], [], []
     with torch.no_grad():
         for start in tqdm(range(starts + 1)):
             (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*64:(start+1)*64])
@@ -124,22 +124,21 @@ def generate(
                 alpha=alpha
             )
             preds = preds[:, 0].cpu()
-            input_sentences += [s for s in source_ids.tolist()]
-            output_sentences += [t for t in target_ids.tolist()]
-            pred_sentences += [p for p in preds.tolist()]
-        assert len(pred_sentences) == len(test_ds)
+            input_ids += [s for s in source_ids.tolist()]
+            output_ids += [p for p in preds.tolist()]
+            ref_ids += [t for t in target_ids.tolist()]
 
-    input_sentences, output_sentences, pred_sentences = tuple(map(
+    input_sentences, output_sentences, ref_sentences = tuple(map(
         lambda seqs: list(map(devectorize, seqs)),
-        (input_sentences, output_sentences, pred_sentences)
+        (input_ids, output_ids, ref_ids)
     ))
 
     with open(f'{store_path}/output.txt', 'w') as f:
         f.write('\n\n'.join(
-            ['\n'.join((i, o, p)) for i, o, p in zip(input_sentences, output_sentences, pred_sentences)]))
+            ['\n'.join((i, o, p)) for i, o, p in zip(input_sentences, output_sentences, ref_sentences)]))
 
     scorer = BLEU(tokenize='13a', lowercase=False)
-    print(scorer.corpus_score(pred_sentences, [output_sentences]))
+    print(scorer.corpus_score(output_sentences, [ref_sentences]))
     print(scorer.get_signature())
     exit(0)
 
