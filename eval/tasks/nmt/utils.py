@@ -41,17 +41,18 @@ def build_vocab(files: list[str]):
 
 def write_vocab(vocab: dict[str, int], path: str) -> None:
     with open(path, 'w') as f:
-        f.write('<SOS>\n<EOS>\n<UNK>\n')
+        f.write('<SOS>\t0\n<EOS>\t1\n<UNK>\t2\n')
         f.write('\n'.join(
-            f'{v}\t{c}'
-            for v, c in sorted(vocab.items(), key=lambda pair: (pair[1], pair[0]), reverse=True)))
+            f'{v}\t{idx+3}'
+            for idx, v in enumerate(sorted(vocab.keys(), key=lambda k: (vocab[k], k), reverse=True))))
 
 
 def read_vocab(path: str) -> dict[str, int]:
-    return defaultdict(
-        lambda: 2,
-        {k.rstrip('\n').split('\t')[0]: i for i, k in enumerate(readlines(path))}
-    )
+    def splitline(line: str) -> tuple[str, int]:
+        key, value = line.strip('\n').split('\t')
+        return key, eval(value)
+
+    return defaultdict(lambda: 2, {k: v for k, v in map(splitline, readlines(path))})
 
 
 def vectorize(line: str, vocab: dict[str, int], wrap: bool) -> list[int]:

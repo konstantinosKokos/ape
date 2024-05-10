@@ -161,7 +161,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal', 'Rotary', 'Relative', 'Absolute'], help='Type of model to use')
     parser.add_argument('--flip', action="store_true", help='Flip translation direction.')
-    parser.add_argument('--vocab_size', type=int, default=36617, help='Size of vocabulary')
+    parser.add_argument('--vocab_size', type=int, required=True, help='Size of vocabulary')
     parser.add_argument('--dim', type=int, default=512, help='Dimension of the model')
     parser.add_argument('--num_layers', type=int, nargs=2, default=(6, 6), help='Number of layers for the model')
     parser.add_argument('--num_heads', type=int, default=8, help='Number of attention heads')

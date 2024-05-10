@@ -40,7 +40,6 @@ def run(
         eos_token_id: int = 1,
         seed: int = 42
 ):
-    start_time = time.time()
     train_set, dev_set = load_datasets(data_path, subsets=('train', 'dev'), flip=flip)
     train_set, dev_set = tuple(map(clean_dataset, (train_set, dev_set)))
     device_ids = list(range(torch.cuda.device_count()))
@@ -116,7 +115,10 @@ def run(
             warmup_steps=4000)
     )
 
-    dev_losses, checkpoint, total_steps, updates, batch_loss, train_rml, epoch = [], 0, 0, 0, None, None, -1
+    dev_losses = []
+    checkpoint, total_steps, updates = 0, 0, 0
+    train_rml, batch_loss, numels = None, None, None
+    epoch = -1
     while True:
         epoch += 1
         model.train()
@@ -124,15 +126,17 @@ def run(
 
         for input_ids, output_ids, input_mask, causal_mask in train_iterator:
             total_steps += 1
-            loss, numels = model.forward(
+            loss, batch_numels = model.forward(
                 source_ids=input_ids,
                 source_mask=input_mask,
                 target_ids=output_ids,
                 causal_mask=causal_mask,
                 reduction='sum'
             )
-            loss = loss.sum()/effective_batch_size
+            loss = loss.sum()
+            batch_numels = batch_numels.sum()
             loss.backward()
+            numels = batch_numels.item() if numels is None else numels + batch_numels.item()
             batch_loss = loss.item() if batch_loss is None else batch_loss + loss.item()
 
             if total_steps % update_every == 0:
@@ -141,13 +145,14 @@ def run(
                 scheduler.step()
                 optim.zero_grad()
 
+                batch_loss /= numels
                 train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
-                batch_loss = None
+                batch_loss, numels = None, None
 
                 if updates > 0 and updates % 500 == 0:
 
                     model.eval()
-                    numels, dev_loss = 0, 0
+                    dev_numels, dev_loss = 0, 0
                     with torch.no_grad():
                         dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size * len(device_ids)))
                         for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
@@ -160,8 +165,8 @@ def run(
                             )
                             loss = loss.sum().item()
                             dev_loss = loss if dev_loss is None else dev_loss + loss
-                            numels += batch_numels.sum().item()
-                        dev_loss /= numels
+                            dev_numels += batch_numels.sum().item()
+                        dev_loss /= dev_numels
 
                         dev_losses.append(dev_loss)
                     model.train()
@@ -175,6 +180,7 @@ def run(
                         checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
                     print('-' * 64)
                     sys.stdout.flush()
+
 
         if updates == num_updates:
             print('Exiting')
