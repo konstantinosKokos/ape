@@ -13,7 +13,7 @@ class InvertibleEmbedding(Module):
         self.weight = Parameter(torch.nn.init.normal_(torch.empty(num_classes, dim)), requires_grad=True)
 
     def embed(self, xs: Tensor) -> Tensor:
-        return embedding(xs.clamp(min=0), self.weight) * sqrt(self.dim)
+        return embedding(xs.clamp(min=0), self.weight, scale_grad_by_freq=True) * sqrt(self.dim)
 
     def invert(self, xs: Tensor) -> Tensor:
         return linear(xs, self.weight)

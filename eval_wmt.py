@@ -114,7 +114,7 @@ def generate(
     with torch.no_grad():
         for start in tqdm(range(starts + 1)):
             (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*64:(start+1)*64])
-            max_decode_length = source_ids.size(1) + 50
+            max_decode_length = int(source_ids.size(1) * 1.5)
             preds, _ = model.forward_dev(
                 source_ids=source_ids,
                 source_mask=source_mask,
@@ -128,10 +128,10 @@ def generate(
             output_ids += [p for p in preds.tolist()]
             ref_ids += [t for t in target_ids.tolist()]
 
-    input_sentences, output_sentences, ref_sentences = tuple(map(
+    input_sentences, output_sentences, ref_sentences = map(
         lambda seqs: list(map(devectorize, seqs)),
         (input_ids, output_ids, ref_ids)
-    ))
+    )
 
     with open(f'{store_path}/output.txt', 'w') as f:
         f.write('\n\n'.join(

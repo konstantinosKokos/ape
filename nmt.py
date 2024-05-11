@@ -1,20 +1,18 @@
 import os
 import sys
-import time
 
 if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not None:
     sys.path.append(os.environ['SLURM_SUBMIT_DIR'])
 
 import argparse
-from random import randint
 
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
-from eval.tasks.nmt import make_collator, load_datasets, clean_dataset, split_dataset, Dataloader
+from eval.tasks.nmt import make_collator, load_datasets, clean_dataset, Dataloader
 
 from unitaryPE.nn.schedule import make_transformer_schedule
 
 import torch
-from torch.optim import AdamW
+from torch.optim import Adam
 from torch.optim.lr_scheduler import LambdaLR
 from torch.nn.parallel import DataParallel
 
@@ -107,7 +105,7 @@ def run(
     model = DataParallel(model, device_ids=device_ids)
     model = model.to(f'cuda:{next(iter(device_ids))}')
 
-    optim = AdamW(model.parameters(), lr=1, betas=(0.9, 0.98), weight_decay=0.)
+    optim = Adam(model.parameters(), lr=1, betas=(0.9, 0.98), weight_decay=0.)
     scheduler = LambdaLR(
         optimizer=optim,
         lr_lambda=make_transformer_schedule(
@@ -117,7 +115,7 @@ def run(
 
     dev_losses = []
     checkpoint, total_steps, updates = 0, 0, 0
-    train_rml, batch_loss, numels = None, None, None
+    train_rml, batch_loss, batch_numels = None, None, None
     epoch = -1
     while True:
         epoch += 1
@@ -126,28 +124,29 @@ def run(
 
         for input_ids, output_ids, input_mask, causal_mask in train_iterator:
             total_steps += 1
-            loss, batch_numels = model.forward(
+            loss, numels = model.forward(
                 source_ids=input_ids,
                 source_mask=input_mask,
                 target_ids=output_ids,
                 causal_mask=causal_mask,
                 reduction='sum'
             )
-            loss = loss.sum()
-            batch_numels = batch_numels.sum()
+            loss, numels = map(torch.sum, (loss, numels))
             loss.backward()
-            numels = batch_numels.item() if numels is None else numels + batch_numels.item()
+            batch_numels = numels.item() if batch_numels is None else batch_numels + numels.item()
             batch_loss = loss.item() if batch_loss is None else batch_loss + loss.item()
 
             if total_steps % update_every == 0:
-                updates += 1
+                for p in model.parameters():
+                    p.grad /= numels
                 optim.step()
                 scheduler.step()
                 optim.zero_grad()
 
-                batch_loss /= numels
+                updates += 1
+                batch_loss /= batch_numels
                 train_rml = batch_loss if train_rml is None else (0.98 * train_rml + 0.02 * batch_loss)
-                batch_loss, numels = None, None
+                batch_loss, batch_numels = None, None
 
                 if updates > 0 and updates % 500 == 0:
 
@@ -156,16 +155,16 @@ def run(
                     with torch.no_grad():
                         dev_iterator = map(collator, dev_dl.get_batches(batch_size=batch_size * len(device_ids)))
                         for input_ids, output_ids, input_mask, causal_mask in dev_iterator:
-                            loss, batch_numels = model.forward(
+                            loss, numels = model.forward(
                                 source_ids=input_ids,
                                 source_mask=input_mask,
                                 target_ids=output_ids,
                                 causal_mask=causal_mask,
                                 reduction='sum'
                             )
-                            loss = loss.sum().item()
-                            dev_loss = loss if dev_loss is None else dev_loss + loss
-                            dev_numels += batch_numels.sum().item()
+                            loss, numels = map(torch.sum, (loss, numels))
+                            dev_numels += numels.item()
+                            dev_loss += loss.item()
                         dev_loss /= dev_numels
 
                         dev_losses.append(dev_loss)
@@ -180,7 +179,6 @@ def run(
                         checkpoint = 0 if checkpoint == (num_checkpoints - 1) else checkpoint + 1
                     print('-' * 64)
                     sys.stdout.flush()
-
 
         if updates == num_updates:
             print('Exiting')

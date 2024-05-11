@@ -162,16 +162,15 @@ def beam_search(
     # Flatten beam dimension
     accumulated_scores = accumulated_scores.flatten(1, -1)
     # Get topk indices
-    topk_values, topk_indices = torch.topk(accumulated_scores, k=beam_width, dim=-1)
+    beam_scores, topk_indices = torch.topk(accumulated_scores, k=beam_width, dim=-1)
     # Revert indexing
     origins = topk_indices // beam_width
     choices = topk_indices % beam_width
-    # # Construct new paths
+    # Construct new paths
     paths = torch.gather(beam_paths, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_paths.size(-1)))
     steps = torch.gather(per_beam_indices, dim=1, index=origins.unsqueeze(-1).expand(-1, -1, beam_width))
     steps = torch.gather(steps, dim=2, index=choices.unsqueeze(-1))
     paths = torch.cat((paths, steps), dim=-1)
-    beam_scores = topk_values
 
     return paths, beam_scores
 
