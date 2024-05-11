@@ -8,7 +8,7 @@ from collections import OrderedDict
 from typing import overload
 
 from eval.tasks.nmt.utils import (
-    read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe)
+    read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe, readlines)
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
 from sacrebleu import BLEU
 from sacremoses import MosesDetokenizer
@@ -106,11 +106,15 @@ def generate(
         return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split())
 
     test_ds, = load_datasets(data_path, ('test',), flip=flip)
-    test_ds = sorted(test_ds, key=lambda pair: sum(map(len, pair)))
+    indices = sorted(range(len(test_ds)), key=lambda idx: (len(test_ds[idx][1]), idx))
+    reverted_indices = sorted(range(len(indices)), key=lambda idx: indices[idx])
+    test_ds = [test_ds[idx] for idx in indices]
     collate_fn = make_collator('cuda')
 
+    references = list(readlines(f'{data_path}/test.{"en" if flip else "de"}'))
+
     starts = len(test_ds) // 64
-    input_ids, output_ids, ref_ids = [], [], []
+    output_ids = []
     with torch.no_grad():
         for start in tqdm(range(starts + 1)):
             (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*64:(start+1)*64])
@@ -124,21 +128,16 @@ def generate(
                 alpha=alpha
             )
             preds = preds[:, 0].cpu()
-            input_ids += [s for s in source_ids.tolist()]
             output_ids += [p for p in preds.tolist()]
-            ref_ids += [t for t in target_ids.tolist()]
 
-    input_sentences, output_sentences, ref_sentences = map(
-        lambda seqs: list(map(devectorize, seqs)),
-        (input_ids, output_ids, ref_ids)
-    )
+    output_sentences = list(map(devectorize, output_ids))
+    output_sentences = [output_sentences[idx] for idx in reverted_indices]
 
-    with open(f'{store_path}/output.txt', 'w') as f:
-        f.write('\n\n'.join(
-            ['\n'.join((i, o, p)) for i, o, p in zip(input_sentences, output_sentences, ref_sentences)]))
+    with open(f'{store_path}/hypotheses.txt', 'w') as f:
+        f.write('\n'.join(output_sentences))
 
-    scorer = BLEU(tokenize='13a', lowercase=False)
-    print(scorer.corpus_score(output_sentences, [ref_sentences]))
+    scorer = BLEU(tokenize='13a', lowercase=False, trg_lang='de')
+    print(scorer.corpus_score(output_sentences, [references]))
     print(scorer.get_signature())
     exit(0)
 
