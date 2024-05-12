@@ -62,11 +62,11 @@ def vectorize(line: str, vocab: dict[str, int], wrap: bool) -> list[int]:
     return tokens
 
 
-def devectorize(tokens: list[int], ivocab: dict[int, str], unwrap: bool) -> str:
+def devectorize(tokens: list[int], ivocab: dict[int, str], unwrap: bool) -> list[str]:
     subwords = [ivocab[token] for token in tokens]
     if unwrap:
         subwords = takewhile(lambda sw: sw != '<EOS>', subwords[1:])
-    return ' '.join(subwords)
+    return list(subwords)
 
 
 def vectorize_file(file: str, vocab: dict[str, int], wrap: bool) -> list[list[int]]:
@@ -153,5 +153,12 @@ def make_collator(device: str | int = 'cpu'):
     return collate_fn
 
 
-def merge_bpe(line: str) -> str:
-    return line.replace('@@ ', '')
+def merge_bpe(xs: list[str]) -> list[str]:
+    match xs:
+        case [x]:
+            return [x]
+        case (x1, x2, *rest):
+            if x1.endswith('@@'):
+                return merge_bpe([x1.rstrip('@@')+x2, *rest])
+            return [x1, *merge_bpe([x2, *rest])]
+
