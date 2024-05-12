@@ -103,7 +103,7 @@ def generate(
     detk = MosesDetokenizer(lang='de')
 
     def devectorize(xs: list[int]) -> str:
-        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split())
+        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)))
 
     test_ds, = load_datasets(data_path, ('test',), flip=flip)
     indices = sorted(range(len(test_ds)), key=lambda idx: (len(test_ds[idx][1]), idx))
