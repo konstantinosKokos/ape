@@ -103,7 +103,7 @@ def generate(
     detk = MosesDetokenizer(lang='de')
 
     def devectorize(xs: list[int]) -> str:
-        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)).split())
+        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)))
 
     test_ds, = load_datasets(data_path, ('test',), flip=flip)
     indices = sorted(range(len(test_ds)), key=lambda idx: (len(test_ds[idx][1]), idx))
@@ -137,7 +137,7 @@ def generate(
         f.write('\n'.join(output_sentences))
 
     scorer = BLEU(tokenize='13a', lowercase=False, trg_lang='de')
-    print(scorer.corpus_score(output_sentences, [references]))
+    print(scorer.corpus_score(output_sentences, [list(map(detk.detokenize, references))]))
     print(scorer.get_signature())
     exit(0)
 
