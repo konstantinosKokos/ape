@@ -137,7 +137,7 @@ def generate(
         f.write('\n'.join(output_sentences))
 
     scorer = BLEU(tokenize='13a', lowercase=False, trg_lang='de')
-    print(scorer.corpus_score(output_sentences, [references]))
+    print(scorer.corpus_score(output_sentences, [list(map(detk.detokenize, references))]))
     print(scorer.get_signature())
     exit(0)
 
