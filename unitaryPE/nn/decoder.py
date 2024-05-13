@@ -87,7 +87,7 @@ class DecoderLayer(Module):
             mask=decoder_mask,
             atn_fn=self_atn_fn
         )
-        dec_mha = decoder_input + dec_mha
+        dec_mha = decoder_input + self.dropout(dec_mha)
         dec_mha = self.self_mha_ln(dec_mha)
         cross_mha = self.cross_mha.forward(
             encoder_input=encoder_input,
@@ -95,9 +95,9 @@ class DecoderLayer(Module):
             cross_mask=cross_mask,
             atn_fn=cross_atn_fn
         )
-        cross_mha = dec_mha + cross_mha
+        cross_mha = dec_mha + self.dropout(cross_mha)
         cross_mha = self.cross_mha_ln(cross_mha)
 
         ffn = self.ffn(cross_mha)
-        ffn = cross_mha + ffn
+        ffn = cross_mha + self.dropout(ffn)
         return self.ffn_ln(ffn)

@@ -40,6 +40,7 @@ class MTRelative(Module, Base):
             label_smoothing: float = 0.1,
     ) -> tuple[Tensor, Tensor]:
         return super().get_loss(source_ids, target_ids, source_mask, causal_mask, reduction, label_smoothing)
+
     def forward_train(
             self,
             source_ids: Tensor,
