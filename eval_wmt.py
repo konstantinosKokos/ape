@@ -103,15 +103,19 @@ def generate(
     detk = MosesDetokenizer(lang='de')
 
     def devectorize(xs: list[int]) -> str:
-        return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)))
+        return ' '.join(merge_bpe(_devectorize(xs, ivocab, True)))
+    #   return detk.detokenize(merge_bpe(_devectorize(xs, ivocab, True)))
 
-    test_ds, = load_datasets(data_path, ('test',), flip=flip)
+    test_ds, = load_datasets(data_path, ('dev',), flip=flip)
     indices = sorted(range(len(test_ds)), key=lambda idx: (len(test_ds[idx][1]), idx))
     reverted_indices = sorted(range(len(indices)), key=lambda idx: indices[idx])
     test_ds = [test_ds[idx] for idx in indices]
     collate_fn = make_collator('cuda')
 
-    references = list(readlines(f'{data_path}/test.{"en" if flip else "de"}'))
+    
+    ref_file = f'{data_path}/dev.{"en" if flip else "de"}.detok'
+    print(f"Reading references from {ref_file}")
+    references = list(readlines(ref_file))
 
     starts = len(test_ds) // 64
     output_ids = []
