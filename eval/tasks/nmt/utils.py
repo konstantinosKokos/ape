@@ -77,7 +77,7 @@ def vectorize_files(path: str, vocab_path: str) -> None:
     vocab = read_vocab(vocab_path)
     for lang in {'en', 'de'}:
         for subset in {'train', 'dev', 'test'}:
-            vectorized = vectorize_file(f'{path}/bpe.{subset}.{lang}', vocab, True)
+            vectorized = vectorize_file(f'{path}/bpe.{subset}.tok.{lang}', vocab, True)
             with open(f'{path}/{subset}.{lang}.vec', 'wb') as f:
                 pickle.dump(vectorized, f)
 
