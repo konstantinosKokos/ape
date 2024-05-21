@@ -180,10 +180,10 @@ def run(
                     print('-' * 64)
                     sys.stdout.flush()
 
-        if updates == num_updates:
-            print('Exiting')
-            sys.stdout.flush()
-            break
+            if updates == num_updates:
+                print('Exiting')
+                sys.stdout.flush()
+                break
 
 
 def parse_args():
