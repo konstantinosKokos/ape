@@ -15,6 +15,8 @@ from sacremoses import MosesDetokenizer
 
 from tqdm import tqdm
 
+from time import time
+
 
 def generate(
         flip: bool,
@@ -111,16 +113,16 @@ def generate(
     test_ds = [test_ds[idx] for idx in indices]
     collate_fn = make_collator('cuda')
 
-    
     ref_file = f'{data_path}/test.{"en" if flip else "de"}.detok'
     print(f"Reading references from {ref_file}")
     references = list(readlines(ref_file))
 
-    starts = len(test_ds) // 64
+    starts = len(test_ds) // 128
     output_ids = []
+    start = time()
     with torch.no_grad():
         for start in tqdm(range(starts + 1)):
-            (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*64:(start+1)*64])
+            (source_ids, target_ids, source_mask, _) = collate_fn(test_ds[start*128:(start+1)*128])
             max_decode_length = int(source_ids.size(1) * 1.5)
             preds, _ = model.forward_dev(
                 source_ids=source_ids,
@@ -132,6 +134,8 @@ def generate(
             )
             preds = preds[:, 0].cpu()
             output_ids += [p for p in preds.tolist()]
+    end = time()
+    print(f'Took {end - start}')
 
     output_sentences = list(map(devectorize, output_ids))
     output_sentences = [output_sentences[idx] for idx in reverted_indices]
