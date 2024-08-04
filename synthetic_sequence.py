@@ -149,7 +149,7 @@ def train(
         model.train()
         print(f'{epoch}')
         for (source_ids, target_ids, source_mask, causal_mask) in train_dl:
-            loss = model.get_loss(
+            loss, _ = model.get_loss(
                 source_ids=source_ids,
                 source_mask=source_mask,
                 target_ids=target_ids,
@@ -166,7 +166,7 @@ def train(
             with torch.no_grad():
                 epoch_loss = 0.
                 for (source_ids, target_ids, source_mask, causal_mask) in dev_dl:
-                    loss = model.get_loss(
+                    loss, _ = model.get_loss(
                         source_ids=source_ids,
                         source_mask=source_mask,
                         target_ids=target_ids,
