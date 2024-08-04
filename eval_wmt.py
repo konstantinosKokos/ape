@@ -135,7 +135,7 @@ def generate(
             preds = preds[:, 0].cpu()
             output_ids += [p for p in preds.tolist()]
     end = time()
-    print(f'Took {end - start}')
+    print(f"Took {(end - start):.2f} seconds")
 
     output_sentences = list(map(devectorize, output_ids))
     output_sentences = [output_sentences[idx] for idx in reverted_indices]
