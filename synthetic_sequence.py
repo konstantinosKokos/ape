@@ -38,7 +38,8 @@ def train(
         seed: int = 42):
     start_time = time.time()
     train_len_dist = Normal(seq_len_mu, seq_len_var)
-    test_len_dist = Normal(seq_len_mu, seq_len_var)
+    test_len_dist = Normal(seq_len_mu * 2, seq_len_var)
+
     match task:
         case 'copy':
             task = SequenceCopy(vocab_size=vocab_size)
@@ -293,15 +294,15 @@ def evaluate(
     with torch.no_grad():
         for (source_ids, target_ids, source_mask, causal_mask) in test_dl:
             pad_mask = target_ids[:, :-1].flatten().ne(-1)
-            batch_xe = model.get_loss(
+            batch_xe, _ = model.get_loss(
                 source_ids=source_ids,
                 source_mask=source_mask,
                 target_ids=target_ids,
                 causal_mask=causal_mask,
                 reduction='none',
                 label_smoothing=0.
-            )[pad_mask]
-            loss = torch.cat((loss, batch_xe), dim=-1)
+            )
+            loss = torch.cat((loss, batch_xe[pad_mask]), dim=-1)
         ppl = torch.exp(torch.mean(loss)).item()
     print(f'{ppl=}')
 
