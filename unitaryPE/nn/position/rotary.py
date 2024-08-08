@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import torch
 from torch import Tensor
-from torch.nn import Module
+from torch.nn import Module, Parameter
 from torch.nn.functional import embedding
 
 from .schemes import AtnFn, multihead_atn_fn
@@ -14,7 +14,7 @@ class Rotary(Module):
 
     def __init__(self, num_positions: int, embedding_dim: int) -> None:
         super().__init__()
-        self.register_buffer('weight', self._init_weight(num_positions, embedding_dim))
+        self.weight = Parameter(self._init_weight(num_positions, embedding_dim))
 
     @staticmethod
     def _init_weight(n_pos: int, dim: int) -> Tensor:
