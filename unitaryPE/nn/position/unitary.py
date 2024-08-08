@@ -18,7 +18,8 @@ class UnitarySequential(Module):
         self.dim = dim
         self.num_heads = num_heads
         self._primitives = Parameter(
-            torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1))
+            torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1),
+            requires_grad=False)
         self.maps = None
 
     @property
