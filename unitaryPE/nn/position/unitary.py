@@ -79,7 +79,7 @@ def rope_like_init(dim: int) -> Tensor:
         optim.step()
         optim.zero_grad()
 
-    return base.detach()
+    return base.detach().float()
 
 
 
