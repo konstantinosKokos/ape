@@ -9,6 +9,8 @@ from torch.nn.utils.rnn import pad_sequence
 from math import ceil, log2
 from typing import NoReturn
 
+from scipy.linalg import logm
+
 from .schemes import grid_applicative, applicative, AtnFn
 
 
@@ -18,14 +20,15 @@ class UnitarySequential(Module):
         self.dim = dim
         self.num_heads = num_heads
         self._primitives = Parameter(
-            torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1),
-            requires_grad=False)
+            rope_like_init(dim // 2).unsqueeze(0).repeat(self.num_heads, 1, 1),
+            # torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1),
+            requires_grad=True)
         self.maps = None
 
     @property
     def hermitian(self) -> Tensor:
-        primitives = self._primitives * torch.tril(torch.ones_like(self._primitives), diagonal=-1)
-        return primitives - primitives.mT
+        # primitives = self._primitives * torch.tril(torch.ones_like(self._primitives), diagonal=-1)
+        return self._primitives - self._primitives.mT
 
     @property
     def primitives(self) -> Tensor:
@@ -56,6 +59,28 @@ class UnitarySequential(Module):
 
     def precompute(self, size: int) -> None:
         self.maps = self._make_maps(size)
+
+
+def rope_like_init(dim: int) -> Tensor:
+    angles = torch.tensor([1 / (10000 ** (2 * (j // 2) / dim)) for j in range(dim)])
+    out = torch.cos(angles).repeat_interleave(2).diag_embed()
+    sines = torch.sin(angles)
+    for idx in range(len(sines)):
+        out[2 * idx, 2 * idx + 1] = sines[idx]
+        out[2 * idx + 1, 2 * idx] = -sines[idx]
+    log = torch.tensor(logm(out)).real
+    base = torch.rand_like(log, requires_grad=True)
+
+    optim = torch.optim.AdamW([base], lr=1e-3)
+
+    for _ in range(10000):
+        loss = torch.norm(log - (base - base.mT)) ** 2
+        loss.backward()
+        optim.step()
+        optim.zero_grad()
+
+    return base.detach()
+
 
 
 def create_paths(
