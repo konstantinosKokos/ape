@@ -4,7 +4,6 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 from torch.nn import Module, Parameter
-from torch.nn.functional import embedding
 
 from .schemes import AtnFn, multihead_atn_fn
 
@@ -12,7 +11,7 @@ from .schemes import AtnFn, multihead_atn_fn
 class Rotary(Module):
     thetas: Tensor
 
-    def __init__(self, freq: int, embedding_dim: int, trainable: bool) -> None:
+    def __init__(self, freq: int, embedding_dim: int, trainable: bool = True) -> None:
         super().__init__()
         self.thetas = Parameter(Rotary.default_angles(freq, embedding_dim), trainable)
 
