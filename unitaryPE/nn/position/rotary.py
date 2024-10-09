@@ -10,41 +10,35 @@ from .schemes import AtnFn, multihead_atn_fn
 
 
 class Rotary(Module):
-    weight: Tensor
+    thetas: Tensor
 
-    def __init__(self, num_positions: int, embedding_dim: int) -> None:
+    def __init__(self, freq: int, embedding_dim: int, trainable: bool) -> None:
         super().__init__()
-        self.weight = Parameter(self._init_weight(num_positions, embedding_dim))
+        self.thetas = Parameter(Rotary.default_angles(freq, embedding_dim), trainable)
 
-    @staticmethod
-    def _init_weight(n_pos: int, dim: int) -> Tensor:
-        out = torch.zeros(n_pos, dim, dtype=torch.float)
-        position_enc = torch.tensor(
-            [[pos / (10000 ** (2 * (j // 2) / dim)) for j in range(dim)] for pos in range(n_pos)]
-        )
-        sentinel = dim // 2 if dim % 2 == 0 else (dim // 2) + 1
-        out[:, 0:sentinel] = torch.sin(position_enc[:, 0::2])
-        out[:, sentinel:] = torch.cos(position_enc[:, 1::2])
-        return out
-
-    @torch.no_grad()
     def forward(self, max_seq_len: int) -> Tensor:
         positions = torch.arange(
-            start=0,  end=max_seq_len, dtype=torch.long, device=self.weight.device
+            start=0,  end=max_seq_len, dtype=torch.long, device=self.thetas.device
         )
-        return embedding(positions, self.weight)
-    
-    def adjust_attention(self, sinusoidal_pos: Tensor) -> AtnFn:
+        angles = positions.unsqueeze(1) * self.thetas.unsqueeze(0)
+        return torch.cat((angles.sin(), angles.cos()), dim=1)
+
+    @staticmethod
+    def default_angles(freq: int, dim: int) -> Tensor:
+        return 1. / (freq ** (torch.arange(0, dim, 2)[:(dim//2)].float() / dim))
+
+    @staticmethod
+    def adjust_attention(sinusoidal_pos: Tensor) -> AtnFn:
         def f(
                 queries: Tensor,
                 keys: Tensor,
                 mask: Tensor) -> Tensor:
-            queries, keys = self.apply_rotary_position_embeddings(sinusoidal_pos, queries, keys)
+            queries, keys = Rotary.apply_rotary_position_embeddings(sinusoidal_pos, queries, keys)
             return multihead_atn_fn(queries, keys, mask, None)
         return f
     
     @staticmethod
-    def apply_rotary_position_embeddings(sinusoidal_pos, query_layer, key_layer):
+    def apply_rotary_position_embeddings(sinusoidal_pos: Tensor, query_layer: Tensor, key_layer: Tensor) -> Tensor:
         num_qs = query_layer.shape[1]
         num_ks = key_layer.shape[1]
         sin, cos = sinusoidal_pos.chunk(2, dim=-1)
