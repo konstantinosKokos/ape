@@ -138,7 +138,8 @@ def run(
 
             if total_steps % update_every == 0:
                 for p in model.parameters():
-                    p.grad /= numels
+                    if p.requires_grad:
+                        p.grad /= numels
                 optim.step()
                 scheduler.step()
                 optim.zero_grad()
