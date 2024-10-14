@@ -21,13 +21,11 @@ class UnitarySequential(Module):
         self.num_heads = num_heads
         self._primitives = Parameter(
             rope_like_init(dim // 2).unsqueeze(0).repeat(self.num_heads, 1, 1),
-            # torch.tril(torch.randn(self.num_heads, self.dim, self.dim), diagonal=-1).softmax(dim=-1),
             requires_grad=True)
         self.maps = None
 
     @property
     def hermitian(self) -> Tensor:
-        # primitives = self._primitives * torch.tril(torch.ones_like(self._primitives), diagonal=-1)
         return self._primitives - self._primitives.mT
 
     @property
@@ -113,7 +111,7 @@ class UnitaryBranching(Module):
         self.branching_factor = branching_factor
         self.identity: Parameter = Parameter(torch.eye(dim)[None, None], requires_grad=False)
         self._primitives = Parameter(
-            torch.rand(self.branching_factor * self.num_heads + 1, self.dim, self.dim).softmax(dim=-1).cumsum(dim=-1))
+            rope_like_init(dim // 2).unsqueeze(0).repeat(self.branching_factor * self.num_heads + 1, 1, 1))
         self.maps = None
         self.paths = create_paths(16, self.branching_factor)
 
@@ -163,7 +161,7 @@ class UnitaryGrid(Module):
         self.num_heads = num_heads
         self.num_axes = num_axes
         self._primitives = Parameter(
-            torch.rand(self.num_axes * self.num_heads, self.dim, self.dim).softmax(dim=-1).cumsum(-1))
+            rope_like_init(dim//2).unsqueeze(0).repeat(self.num_axes * self.num_heads, 1, 1))
         self.maps = None
 
     @property
