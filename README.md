@@ -1,6 +1,6 @@
 # Algebraic Positional Encodings
 
-This repository implements the methods and experiments described [here](https://arxiv.org/abs/2312.16045) [not peer reviewed].
+This repository implements the methods and experiments described [here](https://arxiv.org/abs/2312.16045) [spotlight @ NeurIPS 2024].
 
 Long story short, we substitute the dot-product attention with a position-dependent bilinear scalar function.
 
