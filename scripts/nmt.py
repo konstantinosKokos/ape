@@ -16,6 +16,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import LambdaLR
 from torch.nn.parallel import DataParallel
 
+from time import time
 
 def argmin(xs: list[float]) -> int:
     return min(list(range(len(xs))), key=lambda i: xs[i])
@@ -117,6 +118,9 @@ def run(
     checkpoint, total_steps, updates = 0, 0, 0
     train_rml, batch_loss, batch_numels = None, None, None
     epoch = -1
+
+    start = time()
+
     while True:
         epoch += 1
         model.train()
@@ -138,7 +142,8 @@ def run(
 
             if total_steps % update_every == 0:
                 for p in model.parameters():
-                    p.grad /= numels
+                    if p.requires_grad:
+                        p.grad /= numels
                 optim.step()
                 scheduler.step()
                 optim.zero_grad()
@@ -184,6 +189,13 @@ def run(
                 print('Exiting')
                 sys.stdout.flush()
                 break
+
+            if total_steps == 1000:
+                break
+
+        end = time()
+        break
+    print(end - start)
 
 
 def parse_args():

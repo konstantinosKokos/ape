@@ -22,7 +22,7 @@ class MTRotary(Module, Base):
         super(MTRotary, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = Rotary(num_positions=1000, embedding_dim=dim//num_heads)
+        self.positional_encoder = Rotary(embedding_dim=dim//num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim

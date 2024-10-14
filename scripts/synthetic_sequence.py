@@ -38,7 +38,7 @@ def train(
         seed: int = 42):
     start_time = time.time()
     train_len_dist = Normal(seq_len_mu, seq_len_var)
-    test_len_dist = Normal(seq_len_mu * 2, seq_len_var)
+    test_len_dist = Normal(seq_len_mu, seq_len_var)
 
     match task:
         case 'copy':
