@@ -4,11 +4,11 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.attention import multihead_atn_fn
-from unitaryPE.nn.position import Absolute
-from unitaryPE.nn.embedding import InvertibleEmbedding
+from ape.nn.encoder import Encoder
+from ape.nn.decoder import Decoder
+from ape.nn.attention import multihead_atn_fn
+from ape.nn.position import Absolute
+from ape.nn.embedding import InvertibleEmbedding
 
 
 class MTAbsolute(Module, Base):

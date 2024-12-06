@@ -2,11 +2,11 @@ from torch.nn import Module
 from torch import Tensor
 
 from .base import Base
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.position import TreePE
-from unitaryPE.nn.embedding import InvertibleEmbedding
-from unitaryPE.nn.attention import multihead_atn_fn
+from ape.nn.encoder import Encoder
+from ape.nn.decoder import Decoder
+from ape.nn.position import TreePE
+from ape.nn.embedding import InvertibleEmbedding
+from ape.nn.attention import multihead_atn_fn
 
 
 class ShivQuirk(Module, Base):

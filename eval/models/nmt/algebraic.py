@@ -4,13 +4,13 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.position import UnitarySequential
-from unitaryPE.nn.embedding import InvertibleEmbedding
+from ape.nn.encoder import Encoder
+from ape.nn.decoder import Decoder
+from ape.nn.position import Sequential
+from ape.nn.embedding import InvertibleEmbedding
 
 
-class MTUnitary(Module, Base):
+class MTAlgebraic(Module, Base):
     def __init__(
             self,
             vocab_size: int,
@@ -19,10 +19,10 @@ class MTUnitary(Module, Base):
             num_layers: tuple[int, int],
             sos_token_id: int,
             eos_token_id: int):
-        super(MTUnitary, self).__init__()
+        super(MTAlgebraic, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = UnitarySequential(dim=dim // num_heads, num_heads=num_heads)
+        self.positional_encoder = Sequential(dim=dim // num_heads, num_heads=num_heads)
         self.embedding = InvertibleEmbedding(num_classes=vocab_size, dim=dim)
         self.vocab_size = vocab_size
         self.dim = dim

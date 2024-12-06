@@ -1,1 +1,1 @@
-from .cct import UnitaryCCT, SinusoidalCCT, AbsoluteCCT, UnitarySeqCCT
+from .cct import AlgebraicCCT, SinusoidalCCT, AbsoluteCCT, AlgebraicSeqCCT

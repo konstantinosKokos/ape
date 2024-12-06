@@ -14,9 +14,9 @@ from scipy.linalg import logm
 from .schemes import grid_applicative, applicative, AtnFn
 
 
-class UnitarySequential(Module):
+class Sequential(Module):
     def __init__(self, dim: int, num_heads: int) -> None:
-        super(UnitarySequential, self).__init__()
+        super(Sequential, self).__init__()
         self.dim = dim
         self.num_heads = num_heads
         self._primitives = Parameter(
@@ -103,7 +103,7 @@ def create_steps(path_words: Tensor, branching_factor: int) -> Tensor:
     return sum_lens - 2 * cpl
 
 
-class UnitaryBranching(Module):
+class Branching(Module):
     def __init__(self, dim: int, branching_factor: int, num_heads: int):
         super().__init__()
         self.dim = dim
@@ -154,9 +154,9 @@ class UnitaryBranching(Module):
         return maps, steps
 
 
-class UnitaryGrid(Module):
+class Grid(Module):
     def __init__(self, num_axes: int, dim: int, num_heads: int) -> None:
-        super(UnitaryGrid, self).__init__()
+        super(Grid, self).__init__()
         self.dim = dim
         self.num_heads = num_heads
         self.num_axes = num_axes

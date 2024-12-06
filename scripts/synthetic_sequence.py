@@ -14,7 +14,7 @@ from eval.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from eval.tasks.tree.batching import make_flat_collator
 from eval.tasks.sequence.batching import make_collator
 from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute
-from unitaryPE.nn.schedule import make_schedule
+from ape.nn.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
 from torch.optim import AdamW

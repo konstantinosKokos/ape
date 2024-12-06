@@ -2,12 +2,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module, Conv2d, Linear, MaxPool2d, Sequential, ReLU, Embedding
 
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.position import UnitaryGrid, SinusoidalGrid, UnitarySequential
-from unitaryPE.nn.attention import multihead_atn_fn
+from ape.nn.encoder import Encoder
+from ape.nn.position import Grid, SinusoidalGrid, Sequential
+from ape.nn.attention import multihead_atn_fn
 
 
-class UnitaryCCT(Module):
+class AlgebraicCCT(Module):
     def __init__(
             self,
             dim: int,
@@ -17,7 +17,7 @@ class UnitaryCCT(Module):
             kernel_size: tuple[int, int],
             num_classes: int,
             mlp_ratio: int):
-        super(UnitaryCCT, self).__init__()
+        super(AlgebraicCCT, self).__init__()
         self.patch_embed = Sequential(
             Conv2d(
                 in_channels=in_channels,
@@ -37,7 +37,7 @@ class UnitaryCCT(Module):
             activation='GELU',
             drop_path=True,
             mlp_ratio=mlp_ratio)
-        self.positional_encoder = UnitaryGrid(num_axes=2, num_heads=num_heads, dim=dim//(num_heads*2))
+        self.positional_encoder = Grid(num_axes=2, num_heads=num_heads, dim=dim//(num_heads*2))
         self.pooler = Linear(dim, 1)
         self.fc = Linear(dim, num_classes)
 
@@ -160,7 +160,7 @@ class AbsoluteCCT(Module):
         return self.fc(aggr)
 
 
-class UnitarySeqCCT(Module):
+class AlgebraicSeqCCT(Module):
     def __init__(
             self,
             dim: int,
@@ -170,7 +170,7 @@ class UnitarySeqCCT(Module):
             kernel_size: tuple[int, int],
             num_classes: int,
             mlp_ratio: int):
-        super(UnitarySeqCCT, self).__init__()
+        super(AlgebraicSeqCCT, self).__init__()
         self.patch_embed = Sequential(
             Conv2d(
                 in_channels=in_channels,
@@ -190,7 +190,7 @@ class UnitarySeqCCT(Module):
             activation='GELU',
             drop_path=True,
             mlp_ratio=mlp_ratio)
-        self.positional_encoder = UnitarySequential(dim=dim//num_heads, num_heads=num_heads)
+        self.positional_encoder = Sequential(dim=dim//num_heads, num_heads=num_heads)
         self.pooler = Linear(dim, 1)
         self.fc = Linear(dim, num_classes)
 

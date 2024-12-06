@@ -9,9 +9,9 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 
 import torch
 
-from eval.models.image import UnitaryCCT, SinusoidalCCT, AbsoluteCCT, UnitarySeqCCT
+from eval.models.image import AlgebraicCCT, SinusoidalCCT, AbsoluteCCT, AlgebraicSeqCCT
 from eval.models.image.augmentations import CIFAR10Policy
-from unitaryPE.nn.schedule import make_schedule
+from ape.nn.schedule import make_schedule
 from torchvision.datasets import CIFAR10
 from torchvision import transforms
 from torch.utils.data import DataLoader
@@ -57,7 +57,7 @@ def run(
 
     match model:
         case 'Unitary':
-            model = UnitaryCCT(
+            model = AlgebraicCCT(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,
@@ -85,7 +85,7 @@ def run(
                 mlp_ratio=mlp_ratio,
                 num_embeddings=image_size).cuda()
         case 'UnitarySeq':
-            model = UnitarySeqCCT(
+            model = AlgebraicSeqCCT(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,

@@ -4,10 +4,10 @@ from torch.nn import Module
 from torch import Tensor
 import torch
 
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.position import Relative
-from unitaryPE.nn.embedding import InvertibleEmbedding
+from ape.nn.encoder import Encoder
+from ape.nn.decoder import Decoder
+from ape.nn.position import Relative
+from ape.nn.embedding import InvertibleEmbedding
 
 
 class MTRelative(Module, Base):

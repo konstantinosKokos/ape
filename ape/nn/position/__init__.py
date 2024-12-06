@@ -1,4 +1,4 @@
-from .unitary import UnitarySequential, UnitaryBranching, UnitaryGrid
+from .algebraic import  Sequential, Branching, Grid
 from .sinusoidal import SinusoidalFlat, SinusoidalGrid
 from .relative import Relative
 from .rotary import Rotary

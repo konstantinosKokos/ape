@@ -3,13 +3,13 @@ from torch import Tensor
 import torch
 
 from .base import Base
-from unitaryPE.nn.encoder import Encoder
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.position import UnitaryBranching
-from unitaryPE.nn.embedding import InvertibleEmbedding
+from ape.nn.encoder import Encoder
+from ape.nn.decoder import Decoder
+from ape.nn.position import Branching
+from ape.nn.embedding import InvertibleEmbedding
 
 
-class TreeUnitary(Module, Base):
+class TreeAlgebraic(Module, Base):
     def __init__(
             self,
             vocab_size: int,
@@ -17,10 +17,10 @@ class TreeUnitary(Module, Base):
             num_heads: int,
             num_layers: tuple[int, int],
             branching_factor: int):
-        super(TreeUnitary, self).__init__()
+        super(TreeAlgebraic, self).__init__()
         self.encoder = Encoder(num_heads=num_heads, num_layers=num_layers[0], dim=dim)
         self.decoder = Decoder(num_heads=num_heads, num_layers=num_layers[1], dim=dim)
-        self.positional_encoder = UnitaryBranching(
+        self.positional_encoder = Branching(
             dim=dim//num_heads,
             branching_factor=branching_factor,
             num_heads=num_heads)

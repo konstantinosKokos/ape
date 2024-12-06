@@ -9,7 +9,7 @@ import argparse
 from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
 from eval.tasks.nmt import make_collator, load_datasets, clean_dataset, Dataloader
 
-from unitaryPE.nn.schedule import make_transformer_schedule
+from ape.nn.schedule import make_transformer_schedule
 
 import torch
 from torch.optim import Adam

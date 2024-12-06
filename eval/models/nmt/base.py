@@ -3,9 +3,9 @@ from torch.nn.functional import cross_entropy, log_softmax
 from torch import Tensor
 from abc import abstractmethod, ABC
 
-from unitaryPE.nn.attention import AtnFn
-from unitaryPE.nn.decoder import Decoder
-from unitaryPE.nn.embedding import InvertibleEmbedding
+from ape.nn.attention import AtnFn
+from ape.nn.decoder import Decoder
+from ape.nn.embedding import InvertibleEmbedding
 
 
 class Base(ABC):
