@@ -1,4 +1,4 @@
-from .applicative import TreeUnitary
+from .algebraic import TreeAlgebraic
 from .shiv_quirk import ShivQuirk
 
 from enum import Enum, auto

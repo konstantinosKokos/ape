@@ -1,4 +1,4 @@
-from .applicative import MTUnitary
+from .algebraic import MTAlgebraic
 from .vanilla import MTVanilla
 from .rotary import MTRotary
 from .relative import MTRelative
