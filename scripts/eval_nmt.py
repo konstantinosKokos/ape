@@ -9,7 +9,7 @@ from typing import overload
 
 from eval.tasks.nmt.utils import (
     read_vocab, load_datasets, devectorize as _devectorize, make_collator, merge_bpe, readlines)
-from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
+from eval.models.nmt import Model, MTAlgebraic, MTVanilla, MTRotary, MTRelative, MTAbsolute, make_decoder_mask
 from sacrebleu import BLEU
 from sacremoses import MosesDetokenizer
 
@@ -35,7 +35,7 @@ def generate(
 ):
     match model:
         case Model.Unitary:
-            model = MTUnitary(
+            model = MTAlgebraic(
                 vocab_size=vocab_size,
                 num_layers=num_layers,
                 dim=dim,

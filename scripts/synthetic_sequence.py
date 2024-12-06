@@ -13,7 +13,7 @@ from eval.tasks.sequence import SequenceRepeat, SequenceCopy, SequenceReverse
 from eval.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from eval.tasks.tree.batching import make_flat_collator
 from eval.tasks.sequence.batching import make_collator
-from eval.models.nmt import Model, MTUnitary, MTRelative, MTVanilla, MTRotary, MTAbsolute
+from eval.models.nmt import Model, MTAlgebraic, MTRelative, MTVanilla, MTRotary, MTAbsolute
 from ape.nn.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -95,7 +95,7 @@ def train(
                 eos_token_id=task.eos_token_id
             ).to('cuda')
         case Model.Unitary:
-            model = MTUnitary(
+            model = MTAlgebraic(
                 vocab_size=vocab_size + 2,
                 dim=dim,
                 num_heads=num_heads,

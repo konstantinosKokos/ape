@@ -6,7 +6,7 @@ if (slurm_submit_dir := os.environ.get('SLURM_SUBMIT_DIR', default=None)) is not
 
 import argparse
 
-from eval.models.nmt import Model, MTUnitary, MTVanilla, MTRotary, MTRelative, MTAbsolute
+from eval.models.nmt import Model, MTAlgebraic, MTVanilla, MTRotary, MTRelative, MTAbsolute
 from eval.tasks.nmt import make_collator, load_datasets, clean_dataset, Dataloader
 
 from ape.nn.schedule import make_transformer_schedule
@@ -54,7 +54,7 @@ def run(
 
     match model:
         case Model.Unitary:
-            model = MTUnitary(
+            model = MTAlgebraic(
                 vocab_size=vocab_size,
                 num_layers=num_layers,
                 dim=dim,
