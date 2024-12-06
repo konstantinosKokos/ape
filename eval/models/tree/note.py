@@ -40,9 +40,7 @@ class NoTE(Module, Base):
 
         unique_enc_pos, inverse_x = encoder_pos.unique(return_inverse=True)
         self.positional_encoder.precompute(positions=unique_enc_pos.cpu().tolist())
-        unique_maps, unique_steps = self.positional_encoder.maps
-        steps = unique_steps[inverse_x.unsqueeze(-1), inverse_x.unsqueeze(0)]
-        enc_maps = unique_maps[inverse_x[:len(unique_enc_pos)]][inverse_x]
+        enc_maps, steps = self.positional_encoder.maps
         enc_mediator = make_mediator(steps, inverse_x, inverse_x)
 
         enc_atn_fn = self.positional_encoder.adjust_attention(
