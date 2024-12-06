@@ -11,7 +11,7 @@ import torch
 
 from eval.tasks.tree import TreeCopy, TreeReorder, C3, TreeApply
 from eval.tasks.tree.batching import make_collator
-from eval.models.tree import TreeAlgebraic, ShivQuirk, Model
+from eval.models.tree import TreeAlgebraic, ShivQuirk, NoTE, Model
 from ape.nn.schedule import make_schedule
 from torch.distributions import Normal
 from torch.utils.data import DataLoader
@@ -81,6 +81,14 @@ def run(
                 num_layers=num_layers,
                 branching_factor=2,
                 max_depth=tree_depth_mu + tree_depth_var).to('cuda')
+        case Model.NoTE:
+            model = NoTE(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                branching_factor=2
+            )
         case _:
             raise ValueError
 
