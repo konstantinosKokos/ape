@@ -250,7 +250,7 @@ def evaluate(
                 eos_token_id=task.eos_token_id
             ).to('cuda')
         case Model.Unitary:
-            model = MTUnitary(
+            model = MTAlgebraic(
                 vocab_size=vocab_size + 2,
                 dim=dim,
                 num_heads=num_heads,
