@@ -87,8 +87,7 @@ def run(
                 dim=dim,
                 num_heads=num_heads,
                 num_layers=num_layers,
-                branching_factor=2
-            )
+                branching_factor=2).to('cuda')
         case _:
             raise ValueError
 
@@ -201,6 +200,14 @@ def evaluate(
                 num_layers=num_layers,
                 branching_factor=2,
                 max_depth=tree_depth_mu + tree_depth_var).to('cuda')
+        case Model.NoTE:
+            model = NoTE(
+                vocab_size=vocab_size + 2,
+                dim=dim,
+                num_heads=num_heads,
+                num_layers=num_layers,
+                branching_factor=2).to('cuda')
+
         case _:
             raise ValueError
 
@@ -229,7 +236,7 @@ def evaluate(
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
     parser.add_argument('--eval', action='store_true')
-    parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'ShivQuirk'], help='Type of model to use')
+    parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'ShivQuirk', 'NoTE'], help='Type of model to use')
     parser.add_argument('--regression', type=str, required=True, choices=['breadth', 'depth'], help='Decoding order')
     parser.add_argument('--vocab_size', type=int, default=20, help='Size of vocabulary')
     parser.add_argument('--tree_depth_mu', type=int, default=7, help='Mean tree depth')

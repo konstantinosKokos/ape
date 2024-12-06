@@ -46,3 +46,11 @@
 --model ShivQuirk --task apply --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/apply.breadth.ShivQuirk.1.p
 --model ShivQuirk --task apply --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression depth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/tree/apply.depth.ShivQuirk.2.p
 --model ShivQuirk --task apply --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 1312 --store_path /scratch/work/kogkalk1/ape/models/tree/apply.breadth.ShivQuirk.2.p
+--model NoTE --task copy --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/copy.breadth.NoTE.2.p
+--model NoTE --task reorder --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/reorder.breadth.NoTE.2.p
+--model NoTE --task c3 --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/c3.breadth.NoTE.2.p
+--model NoTE --task apply --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression breadth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/apply.breadth.NoTE.2.p
+--model NoTE --task copy --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/copy.depth.NoTE.2.p
+--model NoTE --task reorder --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/reorder.depth.NoTE.2.p
+--model NoTE --task c3 --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/c3.depth.NoTE.2.p
+--model NoTE --task apply --tree_depth_mu 7 --tree_depth_var 1 --vocab_size 128 --regression depth --seed 42 --store_path /scratch/work/kogkalk1/ape/models/tree/apply.depth.NoTE.2.p
