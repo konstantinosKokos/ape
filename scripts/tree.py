@@ -179,7 +179,7 @@ def evaluate(
 
     match model:
         case Model.Unitary:
-            model = TreeUnitary(
+            model = TreeAlgebraic(
                 vocab_size=vocab_size + 2,
                 dim=dim,
                 num_heads=num_heads,
