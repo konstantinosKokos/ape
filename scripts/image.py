@@ -56,7 +56,7 @@ def run(
     torch.manual_seed(seed)
 
     match model:
-        case 'Unitary':
+        case 'Algebraic':
             model = AlgebraicCCT(
                 dim=dim,
                 num_heads=num_heads,
@@ -84,7 +84,7 @@ def run(
                 num_classes=num_classes,
                 mlp_ratio=mlp_ratio,
                 num_embeddings=image_size).cuda()
-        case 'UnitarySeq':
+        case 'AlgebraicSeq':
             model = AlgebraicSeqCCT(
                 dim=dim,
                 num_heads=num_heads,
@@ -150,7 +150,7 @@ def run(
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Run a single training iteration')
-    parser.add_argument('--model', type=str, required=True, choices=['Unitary', 'Sinusoidal', 'Absolute', 'UnitarySeq'], help='Type of model to use')
+    parser.add_argument('--model', type=str, required=True, choices=['Algebraic', 'Sinusoidal', 'Absolute', 'AlgebraicSeq'], help='Type of model to use')
     parser.add_argument('--data_dir', type=str, required=True, help='Where is the data located')
     parser.add_argument('--num_epochs', type=int, default=300, help='Number of training epochs')
     parser.add_argument('--num_layers', type=int, default=7, help='Number of layers for the model')

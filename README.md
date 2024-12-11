@@ -28,27 +28,26 @@ See the paper for more details.
 If you want to use this with your own work, you will need to make a few simple changes to your transformer's codebase.
 The current implementation allows for generic Transformer layers by having them accept the attention function they are
 to use as an extra argument in their forward pass. The pipeline is as follows:
-1. obtain *absolute* positional encoding matrices through some unitary encoder (see `unitaryPE.nn.positions.unitary`)
+1. obtain *absolute* positional encoding matrices through some algebraic encoder (see `ape.nn.positions.algebraic`)
 2. ask the positional encoder for an attention function given the absolute positional encodings of the queries/keys
-   (see `unitaryPE.nn.positions.schemes` if writing your own)
+   (see `ape.nn.positions.schemes` if writing your own)
 3. pass the attention function on the Transformer encoder, where you can propagate it across layers or apply it once
-   (see `unitaryPE.nn.encoder` for instance)
+   (see `ape.nn.encoder` for instance)
 
 Concrete end-to-end examples in `eval.models` -- navigate to the modality of interest.
 
 Alternatively, you may want to consider tying each Transformer layer to its own positional encoder / attention function.
 It still makes sense to precompute positional encodings externally, so you can parallelize their computation. 
 
-If you're trying to pull something off and it's not working, or if you need clarifications with anything, feel free 
+If you're trying to pull something off, and it's not working, or if you need clarifications with anything, feel free 
 to get in touch/open an issue.
 
 ## Experiments
-The top-level python scripts `image.py`, `sequential.py` and `tree.py` should allow you to replicate any of the 
-experiments detailed in the paper.
+The scripts under `scripts/` should allow you to replicate any of the experiments detailed in the paper.
 For instance
 ```bash
 #!/bin/bash
-python image.py --model Unitary --dataset cifar10 --data_dir $DATA_DIR --store_path $STORE_DIR --seed 1312 
+python scripts/image.py --model Algebraic --dataset cifar10 --data_dir $DATA_DIR --store_path $STORE_DIR --seed 1312 
 ```
 Will do an image classification run on cifar10 using default parameters (make sure to substitute `$DATA_DIR` and
 `$STORE_DIR`).
