@@ -18,7 +18,7 @@ class AlgebraicCCT(Module):
             num_classes: int,
             mlp_ratio: int):
         super(AlgebraicCCT, self).__init__()
-        self.patch_embed = Sequential(
+        self.patch_embed = torch.nn.Sequential(
             Conv2d(
                 in_channels=in_channels,
                 out_channels=dim,
