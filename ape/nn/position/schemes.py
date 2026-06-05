@@ -29,7 +29,7 @@ def grid_applicative(
             queries = torch.cat((queries_x, queries_y), dim=-2)
         if k_maps is not None:
             keys_x, keys_y = keys.chunk(2, dim=-2)
-            maps_x, maps_y = q_maps
+            maps_x, maps_y = k_maps
             keys_x = torch.einsum('bqBh,bqhAB->bqAh', keys_x, maps_x)
             keys_y = torch.einsum('bqBh,bqhAB->bqAh', keys_y, maps_y)
             keys = torch.cat((keys_x, keys_y), dim=-2)
